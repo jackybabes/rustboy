@@ -212,9 +212,12 @@ impl CPU {
                 self.set_hl(result);
                 self.cycles += 8;
             }, // ADD HL, BC (Opcode 0x09) – Add BC to HL
-
-
-
+            0x0A => {
+                // Load memoery pointed to in BC into A
+                let address = self.get_bc();
+                self.a = memory.read(address);
+                self.cycles += 8;
+            }, // LD A,(BC) - 0x0A
 
 
             0x3C => self.a = self.a.wrapping_add(1), // INC A
