@@ -204,14 +204,15 @@ impl CPU {
                 let hl = self.get_hl();
                 let bc = self.get_bc();
                 let (result, carry) = hl.overflowing_add(bc);
-                self.set_hl(result);
+                
                 self.set_n_flag(false);
-                // check this
+                // 11th bit
                 self.set_h_flag((hl & 0x0FFF) + (bc & 0x0FFF) > 0x0FFF);
                 self.set_c_flag(carry);
+                self.set_hl(result);
                 self.cycles += 8;
             }, // ADD HL, BC (Opcode 0x09) – Add BC to HL
-            
+
 
 
 
