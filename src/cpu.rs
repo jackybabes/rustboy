@@ -140,6 +140,17 @@ impl CPU {
         self.set_h_flag(false);
         self.set_c_flag(new_carry);
     }
+    fn rr_register(&mut self, register: &Register) {
+        let value = self.read_register(register);
+        let old_carry = self.get_c_flag();
+        let new_carry = value & 0x01 != 0;
+        let result = (value >> 1) | (old_carry as u8);
+        self.write_register(register, result);
+        self.set_z_flag(false);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(new_carry);
+    }
     fn add_register_pair(&mut self, lhs: &RegisterPair, rhs: &RegisterPair) {
         let lhs_value = self.read_register_pair(lhs);
         let rhs_value = self.read_register_pair(rhs);
@@ -361,6 +372,36 @@ impl CPU {
             0x18 => {
                 panic!("JR instruction not implemented");
             }, // JR - 0x18
+            0x19 => {
+                self.add_register_pair(&REGISTER_HL, &REGISTER_DE);
+                self.cycles += 8;
+            }, // ADD HL, DE - 0x19 
+            0x1A => {
+                let address = self.read_register_pair(&REGISTER_DE);
+                self.a = memory.read_byte(address);
+                self.cycles += 8;
+            }, // LD A,(DE) - 0x1A
+            0x1B => {
+                self.decrement_register_pair(&REGISTER_DE);
+                self.cycles += 8;
+            }, // DEC DE - 0x1B
+            0x1C => {
+                self.increment_register(&Register::E);
+                self.cycles += 4;
+            }, // INC E - 0x1C
+            0x1D => {
+                self.decrement_register(&Register::E);
+                self.cycles += 4;
+            }, // DEC E - 0x1D
+            0x1E => {
+                let byte = self.fetch_byte(memory);
+                self.write_register(&Register::E, byte);
+                self.cycles += 8;
+            }, // LD E,u8 - 0x1E
+            0x1F => {
+                self.rr_register(&Register::A);
+                self.cycles += 4;
+            }, // RR A - 0x1F
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }
