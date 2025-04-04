@@ -224,7 +224,7 @@ impl CPU {
     
 
     pub fn fetch_byte(&mut self, memory: &Memory) -> u8 {
-        let opcode = memory.read(self.pc);
+        let opcode = memory.read_byte(self.pc);
         self.pc += 1;
         opcode
     }
@@ -246,7 +246,7 @@ impl CPU {
             0x02 => {
                 // This instruction stores the value in register A into the memory location pointed to by the BC register pair.
                 let address = self.read_register_pair(&REGISTER_BC);
-                memory.write(address, self.a);
+                memory.write_byte(address, self.a);
                 self.cycles += 8;
             }, // LD (BC),A - 0x02
             0x03 => {
@@ -267,31 +267,24 @@ impl CPU {
                 self.cycles += 8;
             }, //LD B,u8 - 0x06
             0x07 => {
-                // let carry = self.a & 0x80 != 0;
-                // self.set_c_flag(carry);
-                // self.a = self.a << 1;
-                // if self.get_c_flag() {
-                //     self.a |= 0x01;
-                // }
-                // self.set_z_flag(false);
-                // self.set_n_flag(false);
-                // self.set_h_flag(false);
                 self.rlc_register(&Register::A);
                 self.cycles += 4;
             }, // RLC A - 0x07
             0x08 => {
-                // Get next two bytes from memory
-                let low_byte = self.fetch_byte(memory);
-                let high_byte = self.fetch_byte(memory);
+                // // Get next two bytes from memory
+                // let low_byte = self.fetch_byte(memory);
+                // let high_byte = self.fetch_byte(memory);
 
-                // Set the address to the value of the next two bytes
-                let address = ((high_byte as u16) << 8) | (low_byte as u16);
+                // // Set the address to the value of the next two bytes
+                // let address = ((high_byte as u16) << 8) | (low_byte as u16);
+
+                let address = self.fetch_word(memory);
 
                 // Store the value of the stack pointer into the memory location
                 // write first byte
-                memory.write(address, self.sp as u8);
+                memory.write_byte(address, self.sp as u8);
                 // write second byte
-                memory.write(address + 1, (self.sp >> 8) as u8);
+                memory.write_byte(address + 1, (self.sp >> 8) as u8);
 
                 self.cycles += 20;
             }, // LD (u16), SP (Opcode 0x08) – Load Stack Pointer into Memory
@@ -308,15 +301,12 @@ impl CPU {
                 self.cycles += 8;
             }, // ADD HL, BC (Opcode 0x09) – Add BC to HL
             0x0A => {
-                // Load memoery pointed to in BC into A
-                let address = self.get_bc();
-                self.a = memory.read(address);
+                let address = self.read_register_pair(&REGISTER_BC);
+                self.a = memory.read_byte(address);
                 self.cycles += 8;
             }, // LD A,(BC) - 0x0A
             0x0B => {
-                let mut value = self.get_bc();
-                value = value.wrapping_sub(1);
-                self.set_bc(value);
+                self.decrement_register_pair(&REGISTER_BC);
                 self.cycles += 8;
             }, // DEC BC - 0x0B
             0x0C => {
