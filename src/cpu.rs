@@ -129,6 +129,15 @@ impl CPU {
         self.set_h_flag(false);
         self.set_c_flag(carry);
     }
+    fn add_register_pair(&mut self, lhs: &RegisterPair, rhs: &RegisterPair) {
+        let lhs_value = self.read_register_pair(lhs);
+        let rhs_value = self.read_register_pair(rhs);
+        let (result, carry) = lhs_value.overflowing_add(rhs_value);
+        self.set_n_flag(false);
+        self.set_h_flag((lhs_value & 0x0FFF) + (rhs_value & 0x0FFF) > 0x0FFF);
+        self.set_c_flag(carry);
+        self.write_register_pair(lhs, result);
+    }
 }
 
 impl CPU {
@@ -271,33 +280,12 @@ impl CPU {
                 self.cycles += 4;
             }, // RLC A - 0x07
             0x08 => {
-                // // Get next two bytes from memory
-                // let low_byte = self.fetch_byte(memory);
-                // let high_byte = self.fetch_byte(memory);
-
-                // // Set the address to the value of the next two bytes
-                // let address = ((high_byte as u16) << 8) | (low_byte as u16);
-
                 let address = self.fetch_word(memory);
-
-                // Store the value of the stack pointer into the memory location
-                // write first byte
-                memory.write_byte(address, self.sp as u8);
-                // write second byte
-                memory.write_byte(address + 1, (self.sp >> 8) as u8);
-
+                memory.write_word(address, self.sp);
                 self.cycles += 20;
             }, // LD (u16), SP (Opcode 0x08) – Load Stack Pointer into Memory
             0x09 => {
-                let hl = self.get_hl();
-                let bc = self.get_bc();
-                let (result, carry) = hl.overflowing_add(bc);
-                
-                self.set_n_flag(false);
-                // 11th bit
-                self.set_h_flag((hl & 0x0FFF) + (bc & 0x0FFF) > 0x0FFF);
-                self.set_c_flag(carry);
-                self.set_hl(result);
+                self.add_register_pair(&REGISTER_HL, &REGISTER_BC);
                 self.cycles += 8;
             }, // ADD HL, BC (Opcode 0x09) – Add BC to HL
             0x0A => {
