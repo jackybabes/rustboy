@@ -129,6 +129,17 @@ impl CPU {
         self.set_h_flag(false);
         self.set_c_flag(carry);
     }
+    fn rl_register(&mut self, register: &Register) {
+        let value = self.read_register(register);
+        let old_carry = self.get_c_flag();
+        let new_carry = value & 0x80 != 0;
+        let result = (value << 1) | (old_carry as u8);
+        self.write_register(register, result);
+        self.set_z_flag(false);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(new_carry);
+    }
     fn add_register_pair(&mut self, lhs: &RegisterPair, rhs: &RegisterPair) {
         let lhs_value = self.read_register_pair(lhs);
         let rhs_value = self.read_register_pair(rhs);
@@ -253,7 +264,6 @@ impl CPU {
                 self.cycles += 12;
             }, // LD BC,d16
             0x02 => {
-                // This instruction stores the value in register A into the memory location pointed to by the BC register pair.
                 let address = self.read_register_pair(&REGISTER_BC);
                 memory.write_byte(address, self.a);
                 self.cycles += 8;
@@ -314,7 +324,43 @@ impl CPU {
                 self.rrc_register(&Register::A);
                 self.cycles += 4;
             }, // RRC A - 0x0F
-
+            0x10 => {
+                panic!("STOP instruction not implemented");
+            }, // STOP - 0x10
+            0x11 => {
+                let word = self.fetch_word(memory);
+                self.write_register_pair(&REGISTER_DE, word);
+                self.cycles += 12;
+            }, // LD DE,d16 - 0x11
+            0x12 => {
+                let address = self.read_register_pair(&REGISTER_DE);
+                memory.write_byte(address, self.a);
+                self.cycles += 8;
+            }, // LD (DE),A - 0x12
+            0x13 => {
+                self.increment_register_pair(&REGISTER_DE);
+                self.cycles += 8;
+            }, // INC DE - 0x13
+            0x14 => {
+                self.increment_register(&Register::D);
+                self.cycles += 4;
+            }, // INC D - 0x14
+            0x15 => {
+                self.decrement_register(&Register::D);
+                self.cycles += 4;
+            }, // DEC D - 0x15
+            0x16 => {
+                let byte = self.fetch_byte(memory);
+                self.write_register(&Register::D, byte);
+                self.cycles += 8;
+            }, // LD D,u8 - 0x16
+            0x17 => {
+                self.rl_register(&Register::A);
+                self.cycles += 4;
+            }, // RL A - 0x17
+            0x18 => {
+                panic!("JR instruction not implemented");
+            }, // JR - 0x18
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }
