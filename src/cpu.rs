@@ -69,12 +69,12 @@ impl CPU {
             Register::L => self.l = value,
         }
     }
-    fn read_register_pair(&self, register_pair: RegisterPair) -> u16 {
+    fn read_register_pair(&self, register_pair: &RegisterPair) -> u16 {
         let first = self.read_register(&register_pair.first);
         let second = self.read_register(&register_pair.second);
         ((second as u16) << 8) | (first as u16)
     }
-    fn write_register_pair(&mut self, register_pair: RegisterPair, value: u16) {
+    fn write_register_pair(&mut self, register_pair: &RegisterPair, value: u16) {
         let first = (value >> 8) as u8;
         let second = value as u8;
         self.write_register(&register_pair.first, first);
@@ -98,6 +98,36 @@ impl CPU {
         self.set_z_flag(result == 0);
         self.set_n_flag(true);
         self.set_h_flag((value & 0x0F) == 0x0F);
+    }
+    fn increment_register_pair(&mut self, register_pair: &RegisterPair) {
+        let value = self.read_register_pair(register_pair);
+        let result = value.wrapping_add(1);
+        self.write_register_pair(register_pair, result);
+    }
+    fn decrement_register_pair(&mut self, register_pair: &RegisterPair) {
+        let value = self.read_register_pair(register_pair);
+        let result = value.wrapping_sub(1);
+        self.write_register_pair(register_pair, result);
+    }
+    fn rlc_register(&mut self, register: &Register) {
+        let value = self.read_register(register);
+        let carry = value & 0x80 != 0;
+        let result = value.rotate_left(1);
+        self.write_register(register, result);
+        self.set_z_flag(false);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(carry);
+    }
+    fn rrc_register(&mut self, register: &Register) {
+        let value = self.read_register(register);
+        let carry = value & 0x01 != 0;
+        let result = value.rotate_right(1);
+        self.write_register(register, result);
+        self.set_z_flag(false);
+        self.set_n_flag(false);
+        self.set_h_flag(false);
+        self.set_c_flag(carry);
     }
 }
 
@@ -193,36 +223,34 @@ impl CPU {
     }
     
 
-    pub fn fetch(&mut self, memory: &Memory) -> u8 {
+    pub fn fetch_byte(&mut self, memory: &Memory) -> u8 {
         let opcode = memory.read(self.pc);
         self.pc += 1;
         opcode
+    }
+
+    pub fn fetch_word(&mut self, memory: &Memory) -> u16 {
+        let low_byte = self.fetch_byte(memory);
+        let high_byte = self.fetch_byte(memory);
+        ((high_byte as u16) << 8) | (low_byte as u16)
     }
 
     pub fn execute(&mut self, opcode: u8, memory: &mut Memory) {
         match opcode {
             0x00 => {}, // NOP - Do nothing
             0x01 => {
-                // Get next two bytes from memory
-                let low_byte = self.fetch(memory);
-                let high_byte = self.fetch(memory);
-
-                // Set BC to the value of the next two bytes
-                self.c = low_byte;
-                self.b = high_byte;
+                let word = self.fetch_word(memory);
+                self.write_register_pair(&REGISTER_BC, word);
                 self.cycles += 12;
             }, // LD BC,d16
             0x02 => {
                 // This instruction stores the value in register A into the memory location pointed to by the BC register pair.
-                let address = self.get_bc();
+                let address = self.read_register_pair(&REGISTER_BC);
                 memory.write(address, self.a);
                 self.cycles += 8;
             }, // LD (BC),A - 0x02
             0x03 => {
-                self.c = self.c.wrapping_add(1);
-                if self.c == 0 {
-                    self.b = self.b.wrapping_add(1);
-                }
+                self.increment_register_pair(&REGISTER_BC);
                 self.cycles += 8;
             }, // INC BC - 0x03
             0x04 => {
@@ -234,26 +262,27 @@ impl CPU {
                 self.cycles += 4;
             }, // DEC B - 0x05
             0x06 => {
-                let byte = self.fetch(memory);
-                self.b = byte;
+                let byte = self.fetch_byte(memory);
+                self.write_register(&Register::B, byte);
                 self.cycles += 8;
             }, //LD B,u8 - 0x06
             0x07 => {
-                let carry = self.a & 0x80 != 0;
-                self.set_c_flag(carry);
-                self.a = self.a << 1;
-                if self.get_c_flag() {
-                    self.a |= 0x01;
-                }
-                self.set_z_flag(false);
-                self.set_n_flag(false);
-                self.set_h_flag(false);
+                // let carry = self.a & 0x80 != 0;
+                // self.set_c_flag(carry);
+                // self.a = self.a << 1;
+                // if self.get_c_flag() {
+                //     self.a |= 0x01;
+                // }
+                // self.set_z_flag(false);
+                // self.set_n_flag(false);
+                // self.set_h_flag(false);
+                self.rlc_register(&Register::A);
                 self.cycles += 4;
             }, // RLC A - 0x07
             0x08 => {
                 // Get next two bytes from memory
-                let low_byte = self.fetch(memory);
-                let high_byte = self.fetch(memory);
+                let low_byte = self.fetch_byte(memory);
+                let high_byte = self.fetch_byte(memory);
 
                 // Set the address to the value of the next two bytes
                 let address = ((high_byte as u16) << 8) | (low_byte as u16);
@@ -298,6 +327,15 @@ impl CPU {
                 self.decrement_register(&Register::C);
                 self.cycles += 4;
             }, // DEC C - 0x0D
+            0x0E => {
+                let byte = self.fetch_byte(memory);
+                self.write_register(&Register::C, byte);
+                self.cycles += 8;
+            }, // LD C,u8 - 0x0E
+            0x0F => {
+                self.rrc_register(&Register::A);
+                self.cycles += 4;
+            }, // RRC A - 0x0F
 
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
