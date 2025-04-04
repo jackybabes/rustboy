@@ -5,6 +5,27 @@ const FLAG_N: u8 = 0b0100_0000; // Subtraction flag
 const FLAG_H: u8 = 0b0010_0000; // Half Carry flag
 const FLAG_C: u8 = 0b0001_0000; // Carry flag
 
+pub enum Register {
+    A,
+    B,
+    C,
+    D,
+    E,
+    F,
+    H,
+    L
+}
+
+pub struct RegisterPair {
+    pub first: Register,
+    pub second: Register
+}
+
+pub const REGISTER_AF: RegisterPair = RegisterPair { first: Register::A, second: Register::F };
+pub const REGISTER_HL: RegisterPair = RegisterPair { first: Register::H, second: Register::L };
+pub const REGISTER_BC: RegisterPair = RegisterPair { first: Register::B, second: Register::C };
+pub const REGISTER_DE: RegisterPair = RegisterPair { first: Register::D, second: Register::E }; 
+
 // Define CPU registers
 pub struct CPU {
     pub a: u8, pub f: u8, // Accumulator & Flags
@@ -23,6 +44,62 @@ impl std::fmt::Display for CPU {
     }
 }
 
+impl CPU {
+    fn read_register(&self, register: &Register) -> u8 {
+        match register {
+            Register::A => self.a,
+            Register::B => self.b,
+            Register::C => self.c,
+            Register::D => self.d,
+            Register::E => self.e,
+            Register::F => self.f,
+            Register::H => self.h,
+            Register::L => self.l,
+        }
+    }
+    fn write_register(&mut self, register: &Register, value: u8) {
+        match register {
+            Register::A => self.a = value,
+            Register::B => self.b = value,
+            Register::C => self.c = value,
+            Register::D => self.d = value,
+            Register::E => self.e = value,
+            Register::F => self.f = value,
+            Register::H => self.h = value,
+            Register::L => self.l = value,
+        }
+    }
+    fn read_register_pair(&self, register_pair: RegisterPair) -> u16 {
+        let first = self.read_register(&register_pair.first);
+        let second = self.read_register(&register_pair.second);
+        ((second as u16) << 8) | (first as u16)
+    }
+    fn write_register_pair(&mut self, register_pair: RegisterPair, value: u16) {
+        let first = (value >> 8) as u8;
+        let second = value as u8;
+        self.write_register(&register_pair.first, first);
+        self.write_register(&register_pair.second, second);
+    }
+}
+
+impl CPU {
+    fn increment_register(&mut self, register: &Register) {
+        let value = self.read_register(register);
+        let result = value.wrapping_add(1);
+        self.write_register(register, result);
+        self.set_z_flag(result == 0);
+        self.set_n_flag(false);
+        self.set_h_flag((value & 0x0F) + 1 > 0x0F);
+    }
+    fn decrement_register(&mut self, register: &Register) {
+        let value = self.read_register(register);
+        let result = value.wrapping_sub(1);
+        self.write_register(register, result);
+        self.set_z_flag(result == 0);
+        self.set_n_flag(true);
+        self.set_h_flag((value & 0x0F) == 0x0F);
+    }
+}
 
 impl CPU {
     pub fn new() -> Self {
@@ -149,23 +226,12 @@ impl CPU {
                 self.cycles += 8;
             }, // INC BC - 0x03
             0x04 => {
-                self.b = self.b.wrapping_add(1);
+                self.increment_register(&Register::B);
                 self.cycles += 4;
-                self.set_z_flag(self.b == 0);
-                self.set_n_flag(false);
-                // & (bitwise AND) extracts only the lower 4 bits of B.
-                self.set_h_flag((self.b & 0x0F) == 0);
-                // carry uneffected
             }, // INC B - 0x04
             0x05 => {
-                self.b = self.b.wrapping_sub(1);
+                self.decrement_register(&Register::B);
                 self.cycles += 4;
-                self.set_z_flag(self.b == 0);
-                self.set_n_flag(true);
-
-                //Set Half Carry flag if there was a borrow from bit 4
-                self.set_h_flag((self.b & 0x0F) == 0x0F);
-                
             }, // DEC B - 0x05
             0x06 => {
                 let byte = self.fetch(memory);
@@ -218,9 +284,21 @@ impl CPU {
                 self.a = memory.read(address);
                 self.cycles += 8;
             }, // LD A,(BC) - 0x0A
+            0x0B => {
+                let mut value = self.get_bc();
+                value = value.wrapping_sub(1);
+                self.set_bc(value);
+                self.cycles += 8;
+            }, // DEC BC - 0x0B
+            0x0C => {
+                self.increment_register(&Register::C);
+                self.cycles += 4;
+            }, // INC C - 0x0C
+            0x0D => {
+                self.decrement_register(&Register::C);
+                self.cycles += 4;
+            }, // DEC C - 0x0D
 
-
-            0x3C => self.a = self.a.wrapping_add(1), // INC A
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }
