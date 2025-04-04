@@ -20,11 +20,16 @@ impl Memory {
         Memory { data: [0; 0x10000] }
     }
 
-    pub fn read(&self, address: u16) -> u8 {
+    pub fn read_byte(&self, address: u16) -> u8 {
         self.data[address as usize]
     }
 
-    pub fn write(&mut self, address: u16, value: u8) {
+    pub fn write_byte(&mut self, address: u16, value: u8) {
         self.data[address as usize] = value;
+    }
+
+    pub fn write_word(&mut self, address: u16, value: u16) {
+        self.data[address as usize] = (value & 0xFF) as u8;
+        self.data[address as usize + 1] = (value >> 8) as u8;
     }
 }
