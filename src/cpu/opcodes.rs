@@ -35,7 +35,7 @@ impl CPU {
                 self.cycles += 8;
             }, //LD B,u8 - 0x06
             0x07 => {
-                self.rlc_register(&Register::A);
+                self.rotate_left_circular(&Register::A);
                 self.cycles += 4;
             }, // RLC A - 0x07
             0x08 => {
@@ -70,7 +70,7 @@ impl CPU {
                 self.cycles += 8;
             }, // LD C,u8 - 0x0E
             0x0F => {
-                self.rrc_register(&Register::A);
+                self.rotate_right_circular(&Register::A);
                 self.cycles += 4;
             }, // RRC A - 0x0F
             0x10 => {
@@ -104,7 +104,7 @@ impl CPU {
                 self.cycles += 8;
             }, // LD D,u8 - 0x16
             0x17 => {
-                self.rl_register(&Register::A);
+                self.rotate_left_through_carry(&Register::A);
                 self.cycles += 4;
             }, // RL A - 0x17
             0x18 => {
@@ -139,7 +139,7 @@ impl CPU {
                 self.cycles += 8;
             }, // LD E,u8 - 0x1E
             0x1F => {
-                self.rr_register(&Register::A);
+                self.rotate_right_through_carry(&Register::A);
                 self.cycles += 4;
             }, // RR A - 0x1F
             0x20 => {
