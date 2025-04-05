@@ -217,7 +217,7 @@ impl CPU {
                 self.cycles += 8;
             }, // LD L,u8 - 0x2E
             0x2F => {
-                self.complement_carry(&Register::A);
+                self.complement_register(&Register::A);
                 self.cycles += 4;
             }, // CPL - 0x2F
             0x30 => {
@@ -272,7 +272,33 @@ impl CPU {
                 self.add_u16_to_register_pair(&REGISTER_HL, self.sp);
                 self.cycles += 8;
             }, // ADD HL,SP - 0x39
-
+            0x3A => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                self.a = memory.read_byte(address);
+                self.decrement_register_pair(&REGISTER_HL);
+                self.cycles += 8;
+            }, // LD A,(HL-) - 0x3A
+            0x3B => {
+                self.sp = self.sp.wrapping_sub(1);
+                self.cycles += 8;
+            }, // DEC SP - 0x3B
+            0x3C => {
+                self.increment_register(&Register::A);
+                self.cycles += 4;
+            }, // INC A - 0x3C
+            0x3D => {
+                self.decrement_register(&Register::A);
+                self.cycles += 4;
+            }, // DEC A - 0x3D
+            0x3E => {
+                let byte = self.fetch_byte(memory);
+                self.write_register(&Register::A, byte);
+                self.cycles += 8;
+            }, // LD A,u8 - 0x3E
+            0x3F => {
+                self.complement_carry_flag();
+                self.cycles += 4;
+            }, // CCF - 0x3F
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }
