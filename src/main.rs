@@ -1,7 +1,7 @@
 mod cpu;
-mod memory;
-
 use cpu::CPU;
+
+mod memory;
 use memory::Memory;
 
 
@@ -9,9 +9,9 @@ fn main() {
     let mut cpu = CPU::new();
     let mut memory = Memory::new();
 
-    memory.write_byte(0x0100, 0x17);
-    memory.write_byte(0x0101, 0x00);
-    // memory.write(0x0102, 0x01);
+    memory.write_byte(0x0100, 0x04);
+    memory.write_byte(0x0101, 0x18);
+    memory.write_byte(0x0102, 0xFD); // -3 as an i8 in hex
 
 
 
