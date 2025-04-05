@@ -1,4 +1,5 @@
 use super::CPU;
+
 use crate::memory::Memory;
 use super::core::{Register, REGISTER_AF, REGISTER_BC, REGISTER_DE, REGISTER_HL};
 
@@ -108,7 +109,7 @@ impl CPU {
             }, // RL A - 0x17
             0x18 => {
                 let offset = self.fetch_byte(memory) as i8;
-                self.jr(offset);
+                self.jump_relative(offset);
                 self.cycles += 12;
             }, // JR - 0x18
             0x19 => {
@@ -141,7 +142,14 @@ impl CPU {
                 self.rr_register(&Register::A);
                 self.cycles += 4;
             }, // RR A - 0x1F
-            // 0x20 => {
+            0x20 => {
+                let offset = self.fetch_byte(memory) as i8;
+                if self.jump_relative_if_not_zero(offset) {
+                    self.cycles += 12;
+                } else {
+                    self.cycles += 8;
+                }
+            }, // JR NZ,u8 - 0x20
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }
