@@ -1,3 +1,5 @@
+use std::fmt::write;
+
 use crate::memory::Memory;
 // use crate::cpu::jump;
 
@@ -46,8 +48,9 @@ pub struct CPU {
 
 impl std::fmt::Display for CPU {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "CPU {{ A: {}, F: {}, B: {}, C: {}, D: {}, E: {}, H: {}, L: {}, SP: {}, PC: {}, Cycles: {} }}", 
-            self.a, self.f, self.b, self.c, self.d, self.e, self.h, self.l, self.sp, self.pc, self.cycles)
+        write!(f, "CPU {{ A: {}, F: {}, B: {}, C: {}, D: {}, E: {}, H: {}, L: {} }} SP: {}, PC: {}, Cycles: {} FLAGS {{ Z: {}, N: {}, H: {}, C: {} }}", 
+            self.a, self.f, self.b, self.c, self.d, self.e, self.h, self.l, self.sp, self.pc, self.cycles,
+            self.get_flag(&Flag::Z) as u8, self.get_flag(&Flag::N) as u8, self.get_flag(&Flag::H) as u8, self.get_flag(&Flag::C) as u8)
     }
 }
 
