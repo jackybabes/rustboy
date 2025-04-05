@@ -219,10 +219,41 @@ impl CPU {
             0x2F => {
                 self.complement_carry(&Register::A);
                 self.cycles += 4;
-            }
+            }, // CPL - 0x2F
+            0x30 => {
+                let offset = self.fetch_byte(memory) as i8;
+                if self.jump_relative_if_not_carry(offset) {
+                    self.cycles += 12;
+                } else {
+                    self.cycles += 8;
+                }
+            }, // JR NC,u8 - 0x30
+            0x31 => {
+                let word = self.fetch_word(memory);
+                self.sp = word;
+                self.cycles += 12;
+            }, // LD SP,u16 - 0x31
+            0x32 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                memory.write_byte(address, self.a);
+                self.decrement_register_pair(&REGISTER_HL);
+                self.cycles += 8;
+            }, // LD (HL-),A - 0x32
+            0x33 => {
+                self.sp = self.sp.wrapping_add(1);
+                self.cycles += 8;
+            }, // INC SP - 0x33
+            0x34 => {
+                self.increment_byte_pointed_by_register_pair(memory, &REGISTER_HL);
+                self.cycles += 12;
+            }, // INC (HL) - 0x34
+            0x35 => {
+                self.decrement_byte_pointed_by_register_pair(memory, &REGISTER_HL);
+                self.cycles += 12;
+            }, // DEC (HL) - 0x35
+
             
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }
 }
-

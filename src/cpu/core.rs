@@ -140,4 +140,3 @@ impl CPU {
         ((high_byte as u16) << 8) | (low_byte as u16)
     }
 }
-

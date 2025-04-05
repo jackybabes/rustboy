@@ -23,5 +23,22 @@ impl CPU {
             false
         }
     }
-    
+
+    pub fn jump_relative_if_carry(&mut self, offset: i8) -> bool {
+        if self.get_flag(&Flag::C) {
+            self.jump_relative(offset);
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn jump_relative_if_not_carry(&mut self, offset: i8) -> bool {
+        if self.get_flag(&Flag::C) {
+            false
+        } else {
+            self.jump_relative(offset);
+            true
+        }
+    }
 }
