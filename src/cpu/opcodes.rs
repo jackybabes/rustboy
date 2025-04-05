@@ -155,6 +155,41 @@ impl CPU {
                 self.write_register_pair(&REGISTER_HL, word);
                 self.cycles += 12;
             }, // LD HL,u16 - 0x21
+            0x22 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                memory.write_byte(address, self.a);
+                self.increment_register_pair(&REGISTER_HL);
+                self.cycles += 8;
+            }, // LD (HL+),A - 0x22
+            0x23 => {
+                self.increment_register_pair(&REGISTER_HL);
+                self.cycles += 8;
+            }, // INC HL - 0x23
+            0x24 => {
+                self.increment_register(&Register::H);
+                self.cycles += 4;
+            }, // INC H - 0x24
+            0x25 => {
+                self.decrement_register(&Register::H);
+                self.cycles += 4;
+            }, // DEC H - 0x25
+            0x26 => {
+                let byte = self.fetch_byte(memory);
+                self.write_register(&Register::H, byte);
+                self.cycles += 8;
+            }, // LD H,u8 - 0x26
+            0x27 => {
+                panic!("DA A - 0x27 not implemented");
+            }, // DA A - 0x27
+            0x28 => {
+                let offset = self.fetch_byte(memory) as i8;
+                if self.jump_relative_if_zero(offset) {
+                    self.cycles += 12;
+                } else {
+                    self.cycles += 8;
+                }
+            }, // JR Z,u8 - 0x28
+
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }

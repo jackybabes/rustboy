@@ -14,4 +14,14 @@ impl CPU {
             true
         }
     }
+
+    pub fn jump_relative_if_zero(&mut self, offset: i8) -> bool {
+        if self.get_flag(&Flag::Z) {
+            self.jump_relative(offset);
+            true
+        } else {
+            false
+        }
+    }
+    
 }
