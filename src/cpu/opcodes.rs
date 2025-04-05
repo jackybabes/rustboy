@@ -251,8 +251,28 @@ impl CPU {
                 self.decrement_byte_pointed_by_register_pair(memory, &REGISTER_HL);
                 self.cycles += 12;
             }, // DEC (HL) - 0x35
+            0x36 => {
+                let byte = self.fetch_byte(memory);
+                let address = self.read_register_pair(&REGISTER_HL);
+                memory.write_byte(address, byte);
+                self.cycles += 12;
+            }, // LD (HL),u8 - 0x36
+            0x37 => {
+                panic!("SCF - 0x37 not implemented");
+            }, // SCF - 0x37
+            0x38 => {
+                let offset = self.fetch_byte(memory) as i8;
+                if self.jump_relative_if_carry(offset) {
+                    self.cycles += 12;
+                } else {
+                    self.cycles += 8;
+                }
+            }, // JR C,u8 - 0x38
+            0x39 => {
+                self.add_u16_to_register_pair(&REGISTER_HL, self.sp);
+                self.cycles += 8;
+            }, // ADD HL,SP - 0x39
 
-            
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }
