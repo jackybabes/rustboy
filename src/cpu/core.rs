@@ -1,7 +1,4 @@
-use std::fmt::write;
-
 use crate::memory::Memory;
-// use crate::cpu::jump;
 
 const FLAG_Z: u8 = 0b1000_0000; // Zero flag
 const FLAG_N: u8 = 0b0100_0000; // Subtraction flag
