@@ -150,6 +150,11 @@ impl CPU {
                     self.cycles += 8;
                 }
             }, // JR NZ,u8 - 0x20
+            0x21 => {
+                let word = self.fetch_word(memory);
+                self.write_register_pair(&REGISTER_HL, word);
+                self.cycles += 12;
+            }, // LD HL,u16 - 0x21
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }
