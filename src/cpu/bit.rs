@@ -44,5 +44,11 @@ impl CPU {
         self.set_flag(&Flag::H, false);
         self.set_flag(&Flag::C, new_carry);
     }
-    
+    pub fn complement_carry(&mut self, register: &Register) {
+        let value = self.read_register(register);
+        let result = !value;
+        self.write_register(register, result);
+        self.set_flag(&Flag::N, true);
+        self.set_flag(&Flag::H, true);
+    }
 }
