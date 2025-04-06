@@ -299,6 +299,73 @@ impl CPU {
                 self.complement_carry_flag();
                 self.cycles += 4;
             }, // CCF - 0x3F
+            0x40 => {
+                self.cycles += 4;
+            }, // LD B,B - 0x40
+            0x41 => {
+                self.write_register(&Register::B, self.c);  
+                self.cycles += 4;
+            }, // LD B,C - 0x41
+            0x42 => {
+                self.write_register(&Register::B, self.d);
+                self.cycles += 4;
+            }, // LD B,D - 0x42
+            0x43 => {
+                self.write_register(&Register::B, self.e);
+                self.cycles += 4;
+            }, // LD B,E - 0x43
+            0x44 => {
+                self.write_register(&Register::B, self.h);
+                self.cycles += 4;
+            }, // LD B,H - 0x44
+            0x45 => {
+                self.write_register(&Register::B, self.l);
+                self.cycles += 4;
+            }, // LD B,L - 0x45
+            0x46 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                let byte = memory.read_byte(address);
+                self.write_register(&Register::B, byte);
+                self.cycles += 8;
+            }, // LD B,(HL) - 0x46
+            0x47 => {
+                self.write_register(&Register::B, self.a);
+                self.cycles += 4;
+            }, // LD B,A - 0x47
+            0x48 => {
+                self.write_register(&Register::C, self.b);
+                self.cycles += 4;
+            }, // LD C,B - 0x48
+            0x49 => {
+                self.cycles += 4;
+            }, // LD C,C - 0x49
+            0x4A => {
+                self.write_register(&Register::C, self.d);
+                self.cycles += 4;
+            }, // LD C,D - 0x4A
+            0x4B => {
+                self.write_register(&Register::C, self.e);
+                self.cycles += 4;
+            }, // LD C,E - 0x4B
+            0x4C => {
+                self.write_register(&Register::C, self.h);
+                self.cycles += 4;
+            }, // LD C,H - 0x4C
+            0x4D => {
+                self.write_register(&Register::C, self.l);
+                self.cycles += 4;
+            }, // LD C,L - 0x4D
+            0x4E => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                let byte = memory.read_byte(address);
+                self.write_register(&Register::C, byte);
+                self.cycles += 8;
+            }, // LD C,(HL) - 0x4E
+            0x4F => {
+                self.write_register(&Register::C, self.a);
+                self.cycles += 4;
+            }, // LD C,A - 0x4F
+
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }
