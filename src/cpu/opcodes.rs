@@ -365,6 +365,211 @@ impl CPU {
                 self.write_register(&Register::C, self.a);
                 self.cycles += 4;
             }, // LD C,A - 0x4F
+            0x50 => {
+                self.write_register(&Register::D, self.b);
+                self.cycles += 4;
+            }, // LD D,B - 0x50
+            0x51 => {
+                self.write_register(&Register::D, self.c);
+                self.cycles += 4;
+            }, // LD D,C - 0x51
+            0x52 => {
+                self.write_register(&Register::D, self.d);
+                self.cycles += 4;
+            }, // LD D,D - 0x52
+            0x53 => {
+                self.write_register(&Register::D, self.e);
+                self.cycles += 4;
+            }, // LD D,E - 0x53
+            0x54 => {
+                self.write_register(&Register::D, self.h);
+                self.cycles += 4;
+            }, // LD D,H - 0x54
+            0x55 => {
+                self.write_register(&Register::D, self.l);
+                self.cycles += 4;
+            }, // LD D,L - 0x55
+            0x56 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                let byte = memory.read_byte(address);
+                self.write_register(&Register::D, byte);
+                self.cycles += 8;
+            }, // LD D,(HL) - 0x56
+            0x57 => {
+                self.write_register(&Register::D, self.a);
+                self.cycles += 4;
+            }, // LD D,A - 0x57
+            0x58 => {
+                self.write_register(&Register::E, self.b);
+                self.cycles += 4;
+            }, // LD E,B - 0x58
+            0x59 => {
+                self.write_register(&Register::E, self.c);
+                self.cycles += 4;
+            }, // LD E,C - 0x59
+            0x5A => {
+                self.write_register(&Register::E, self.d);
+                self.cycles += 4;
+            }, // LD E,D - 0x5A
+            0x5B => {
+                self.write_register(&Register::E, self.e);
+                self.cycles += 4;
+            }, // LD E,E - 0x5B
+            0x5C => {
+                self.write_register(&Register::E, self.h);
+                self.cycles += 4;
+            }, // LD E,H - 0x5C
+            0x5D => {
+                self.write_register(&Register::E, self.l);
+                self.cycles += 4;
+            }, // LD E,L - 0x5D
+            0x5E => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                let byte = memory.read_byte(address);
+                self.write_register(&Register::E, byte);
+                self.cycles += 8;
+            }, // LD E,(HL) - 0x5E
+            0x5F => {
+                self.write_register(&Register::E, self.a);
+                self.cycles += 4;
+            }, // LD E,A - 0x5F
+            0x60 => {
+                self.write_register(&Register::H, self.b);
+                self.cycles += 4;
+            }, // LD H,B - 0x60
+            0x61 => {
+                self.write_register(&Register::H, self.c);
+                self.cycles += 4;
+            }, // LD H,C - 0x61
+            0x62 => {
+                self.write_register(&Register::H, self.d);
+                self.cycles += 4;
+            }, // LD H,D - 0x62
+            0x63 => {
+                self.write_register(&Register::H, self.e);
+                self.cycles += 4;
+            }, // LD H,E - 0x63
+            0x64 => {
+                self.write_register(&Register::H, self.h);
+                self.cycles += 4;
+            }, // LD H,H - 0x64
+            0x65 => {
+                self.write_register(&Register::H, self.l);
+                self.cycles += 4;
+            }, // LD H,L - 0x65
+            0x66 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                let byte = memory.read_byte(address);
+                self.write_register(&Register::H, byte);
+                self.cycles += 8;
+            }, // LD H,(HL) - 0x66
+            0x67 => {
+                self.write_register(&Register::H, self.a);
+                self.cycles += 4;
+            }, // LD H,A - 0x67
+            0x68 => {
+                self.write_register(&Register::L, self.b);
+                self.cycles += 4;
+            }, // LD L,B - 0x68
+            0x69 => {
+                self.write_register(&Register::L, self.c);
+                self.cycles += 4;
+            }, // LD L,C - 0x69
+            0x6A => {
+                self.write_register(&Register::L, self.d);
+                self.cycles += 4;
+            }, // LD L,D - 0x6A
+            0x6B => {
+                self.write_register(&Register::L, self.e);
+                self.cycles += 4;
+            }, // LD L,E - 0x6B
+            0x6C => {
+                self.write_register(&Register::L, self.h);
+                self.cycles += 4;
+            }, // LD L,H - 0x6C
+            0x6D => {
+                self.write_register(&Register::L, self.l);
+                self.cycles += 4;
+            }, // LD L,L - 0x6D
+            0x6E => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                let byte = memory.read_byte(address);
+                self.write_register(&Register::L, byte);
+                self.cycles += 8;
+            }, // LD L,(HL) - 0x6E
+            0x6F => {
+                self.write_register(&Register::L, self.a);
+                self.cycles += 4;
+            }, // LD L,A - 0x6F
+            0x70 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                memory.write_byte(address, self.b);
+                self.cycles += 8;
+            }, // LD (HL),B - 0x70
+            0x71 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                memory.write_byte(address, self.c);
+                self.cycles += 8;
+            }, // LD (HL),C - 0x71
+            0x72 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                memory.write_byte(address, self.d);
+                self.cycles += 8;
+            }, // LD (HL),D - 0x72
+            0x73 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                memory.write_byte(address, self.e);
+                self.cycles += 8;
+            }, // LD (HL),E - 0x73
+            0x74 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                memory.write_byte(address, self.h);
+                self.cycles += 8;
+            }, // LD (HL),H - 0x74
+            0x75 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                memory.write_byte(address, self.l);
+                self.cycles += 8;
+            }, // LD (HL),L - 0x75
+            0x76 => {
+                panic!("HALT - 0x76 not implemented");
+            }, // HALT - 0x76
+            0x77 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                memory.write_byte(address, self.a);
+                self.cycles += 8;
+            }, // LD (HL),A - 0x77
+            0x78 => {
+                self.write_register(&Register::A, self.b);
+                self.cycles += 4;
+            }, // LD A,B - 0x78
+            0x79 => {
+                self.write_register(&Register::A, self.c);
+                self.cycles += 4;
+            }, // LD A,C - 0x79
+            0x7A => {
+                self.write_register(&Register::A, self.d);
+                self.cycles += 4;
+            }, // LD A,D - 0x7A
+            0x7B => {
+                self.write_register(&Register::A, self.e);
+                self.cycles += 4;
+            }, // LD A,E - 0x7B
+            0x7C => {
+                self.write_register(&Register::A, self.h);
+                self.cycles += 4;
+            }, // LD A,H - 0x7C
+            0x7D => {
+                self.write_register(&Register::A, self.l);
+                self.cycles += 4;
+            }, // LD A,L - 0x7D
+            0x7E => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                self.a = memory.read_byte(address);
+                self.cycles += 8;
+            }, // LD A,(HL) - 0x7E
+
+
 
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
