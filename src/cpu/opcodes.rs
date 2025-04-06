@@ -374,7 +374,6 @@ impl CPU {
                 self.cycles += 4;
             }, // LD D,C - 0x51
             0x52 => {
-                self.write_register(&Register::D, self.d);
                 self.cycles += 4;
             }, // LD D,D - 0x52
             0x53 => {
@@ -412,7 +411,6 @@ impl CPU {
                 self.cycles += 4;
             }, // LD E,D - 0x5A
             0x5B => {
-                self.write_register(&Register::E, self.e);
                 self.cycles += 4;
             }, // LD E,E - 0x5B
             0x5C => {
@@ -450,7 +448,6 @@ impl CPU {
                 self.cycles += 4;
             }, // LD H,E - 0x63
             0x64 => {
-                self.write_register(&Register::H, self.h);
                 self.cycles += 4;
             }, // LD H,H - 0x64
             0x65 => {
@@ -488,7 +485,6 @@ impl CPU {
                 self.cycles += 4;
             }, // LD L,H - 0x6C
             0x6D => {
-                self.write_register(&Register::L, self.l);
                 self.cycles += 4;
             }, // LD L,L - 0x6D
             0x6E => {
@@ -568,7 +564,9 @@ impl CPU {
                 self.a = memory.read_byte(address);
                 self.cycles += 8;
             }, // LD A,(HL) - 0x7E
-
+            0x7F => {
+                self.cycles += 4;
+            }, // LD A,A - 0x7F
 
 
             _ => panic!("Unknown opcode: {:#X}", opcode),
