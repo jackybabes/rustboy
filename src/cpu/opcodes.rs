@@ -1,7 +1,7 @@
 use super::CPU;
 
 use crate::memory::Memory;
-use super::core::{Register, REGISTER_AF, REGISTER_BC, REGISTER_DE, REGISTER_HL};
+use super::core::{Register, Flag, REGISTER_AF, REGISTER_BC, REGISTER_DE, REGISTER_HL};
 
 impl CPU {
     pub fn execute(&mut self, opcode: u8, memory: &mut Memory) {
@@ -567,8 +567,76 @@ impl CPU {
             0x7F => {
                 self.cycles += 4;
             }, // LD A,A - 0x7F
+            0x80 => {
+                self.add_register_to_register(&Register::A, &Register::B);
+                self.cycles += 4;
+            }, // ADD A,B - 0x80
+            0x81 => {
+                self.add_register_to_register(&Register::A, &Register::C);
+                self.cycles += 4;
+            }, // ADD A,C - 0x81
+            0x82 => {
+                self.add_register_to_register(&Register::A, &Register::D);
+                self.cycles += 4;
+            }, // ADD A,D - 0x82
+            0x83 => {
+                self.add_register_to_register(&Register::A, &Register::E);
+                self.cycles += 4;
+            }, // ADD A,E - 0x83
+            0x84 => {
+                self.add_register_to_register(&Register::A, &Register::H);
+                self.cycles += 4;
+            }, // ADD A,H - 0x84
+            0x85 => {
+                self.add_register_to_register(&Register::A, &Register::L);
+                self.cycles += 4;
+            }, // ADD A,L - 0x85
+            0x86 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                self.add_u8_to_register(&Register::A, memory.read_byte(address));
+                self.cycles += 8;
+            }, // ADD A,(HL) - 0x86
+            0x87 => {
+                self.add_register_to_register(&Register::A, &Register::A);
+                self.cycles += 4;
+            }, // ADD A,A - 0x87
+            0x88 => {
+                self.add_register_to_register_with_carry(&Register::A, &Register::B);
+                self.cycles += 4;
+            }, // ADC A,B - 0x88
+            0x89 => {
+                self.add_register_to_register_with_carry(&Register::A, &Register::C);
+                self.cycles += 4;
+            }, // ADC A,C - 0x89
+            0x8A => {
+                self.add_register_to_register_with_carry(&Register::A, &Register::D);
+                self.cycles += 4;
+            }, // ADC A,D - 0x8A
+            0x8B => {
+                self.add_register_to_register_with_carry(&Register::A, &Register::E);
+                self.cycles += 4;
+            }, // ADC A,E - 0x8B
+            0x8C => {
+                self.add_register_to_register_with_carry(&Register::A, &Register::H);
+                self.cycles += 4;
+            }, // ADC A,H - 0x8C
+            0x8D => {
+                self.add_register_to_register_with_carry(&Register::A, &Register::L);
+                self.cycles += 4;
+            }, // ADC A,L - 0x8D
+            0x8E => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                let carry = self.get_flag(&Flag::C);
+                let value = memory.read_byte(address) + carry as u8;
+                self.add_u8_to_register(&Register::A, value);
+                self.cycles += 8;
+            }, // ADC A,(HL) - 0x8E
+            0x8F => {
+                self.add_register_to_register_with_carry(&Register::A, &Register::A);
+                self.cycles += 4;
+            }, // ADC A,A - 0x8F
 
-
+            
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }

@@ -34,17 +34,6 @@ impl CPU {
         self.write_register_pair(register_pair, result);
     }
 
-    // pub fn add_register(&mut self, lhs: &Register, rhs: &Register) {
-    //     let lhs_value = self.read_register(lhs);
-    //     let rhs_value = self.read_register(rhs);
-    //     let (result, carry) = lhs_value.overflowing_add(rhs_value);
-    //     let half_carry = (lhs_value & 0x0F) + (rhs_value & 0x0F) > 0x0F;
-    //     self.set_flag(&Flag::N, false);
-    //     self.set_flag(&Flag::H, half_carry);
-    //     self.set_flag(&Flag::C, carry);
-    //     self.write_register(lhs, result);
-    // }
-
     pub fn add_register_pair(&mut self, lhs: &RegisterPair, rhs: &RegisterPair) {
         let lhs_value = self.read_register_pair(lhs);
         let rhs_value = self.read_register_pair(rhs);
@@ -93,4 +82,27 @@ impl CPU {
         self.set_flag(&Flag::C, carry);
         self.write_register_pair(register_pair, result);
     }
+
+    pub fn add_u8_to_register(&mut self, register: &Register, value_to_add: u8) {
+        let current_value = self.read_register(register);
+        let (result, carry) = current_value.overflowing_add(value_to_add);
+        let half_carry = (current_value & 0x0F) + (value_to_add & 0x0F) > 0x0F;
+        self.set_flag(&Flag::Z, result == 0);
+        self.set_flag(&Flag::N, false);
+        self.set_flag(&Flag::H, half_carry);
+        self.set_flag(&Flag::C, carry);
+        self.write_register(register, result);
+    }
+
+    pub fn add_register_to_register(&mut self, lhs: &Register, rhs: &Register) {
+        let rhs_value = self.read_register(rhs);
+        self.add_u8_to_register(lhs, rhs_value);
+    }
+
+    pub fn add_register_to_register_with_carry(&mut self, lhs: &Register, rhs: &Register) {
+        let rhs_value = self.read_register(rhs);
+        let carry = self.get_flag(&Flag::C);
+        self.add_u8_to_register(lhs, rhs_value + carry as u8);
+    }
+
 }
