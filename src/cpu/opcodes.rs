@@ -699,7 +699,41 @@ impl CPU {
                 self.sub_register_from_register_with_carry(&Register::A, &Register::A);
                 self.cycles += 4;
             }, // SBC A,A - 0x9F
+            0xA0 => {
+                self.and_register_with_register(&Register::A, &Register::B);
+                self.cycles += 4;
+            }, // AND A,B - 0xA0
+            0xA1 => {
+                self.and_register_with_register(&Register::A, &Register::C);
+                self.cycles += 4;
+            }, // AND A,C - 0xA1
+            0xA2 => {
+                self.and_register_with_register(&Register::A, &Register::D);
+                self.cycles += 4;
+            }, // AND A,D - 0xA2
+            0xA3 => {
+                self.and_register_with_register(&Register::A, &Register::E);
+                self.cycles += 4;
+            }, // AND A,E - 0xA3
+            0xA4 => {
+                self.and_register_with_register(&Register::A, &Register::H);
+                self.cycles += 4;
+            }, // AND A,H - 0xA4
+            0xA5 => {
+                self.and_register_with_register(&Register::A, &Register::L);
+                self.cycles += 4;
+            }, // AND A,L - 0xA5
+            0xA6 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                self.and_u8_with_register(&Register::A, memory.read_byte(address));
+                self.cycles += 8;
+            }, // AND A,(HL) - 0xA6
+            0xA7 => {
+                self.and_register_with_register(&Register::A, &Register::A);
+                self.cycles += 4;
+            }, // AND A,A - 0xA7
             
+
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }

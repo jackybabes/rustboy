@@ -58,4 +58,19 @@ impl CPU {
         self.set_flag(&Flag::N, false);
         self.set_flag(&Flag::H, false);
     }
+
+    pub fn and_u8_with_register(&mut self, register: &Register, value: u8) {
+        let current_value = self.read_register(register);
+        let result = current_value & value;
+        self.write_register(register, result);
+        self.set_flag(&Flag::Z, result == 0);
+        self.set_flag(&Flag::N, false);
+        self.set_flag(&Flag::H, true);
+        self.set_flag(&Flag::C, false);
+    }
+
+    pub fn and_register_with_register(&mut self, lhs: &Register, rhs: &Register) {
+        let rhs_value = self.read_register(rhs);
+        self.and_u8_with_register(lhs, rhs_value);
+    }
 }
