@@ -127,4 +127,15 @@ impl CPU {
         self.sub_u8_from_register(lhs, rhs_value);
     }
 
+    pub fn sub_u8_from_register_with_carry(&mut self, register: &Register, value_to_sub: u8) {
+        let carry = self.get_flag(&Flag::C);
+        let value = value_to_sub.wrapping_add(carry as u8);
+        self.sub_u8_from_register(register, value);
+    }
+
+    pub fn sub_register_from_register_with_carry(&mut self, lhs: &Register, rhs: &Register) {
+        let rhs_value = self.read_register(rhs);
+        self.sub_u8_from_register_with_carry(lhs, rhs_value);
+    }
+
 }
