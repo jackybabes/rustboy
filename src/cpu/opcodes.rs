@@ -633,6 +633,39 @@ impl CPU {
                 self.add_register_to_register_with_carry(&Register::A, &Register::A);
                 self.cycles += 4;
             }, // ADC A,A - 0x8F
+            0x90 => {
+                self.sub_register_from_register(&Register::A, &Register::B);
+                self.cycles += 4;
+            }, // SUB A,B - 0x90
+            0x91 => {
+                self.sub_register_from_register(&Register::A, &Register::C);
+                self.cycles += 4;
+            }, // SUB A,C - 0x91
+            0x92 => {
+                self.sub_register_from_register(&Register::A, &Register::D);
+                self.cycles += 4;
+            }, // SUB A,D - 0x92
+            0x93 => {
+                self.sub_register_from_register(&Register::A, &Register::E);
+                self.cycles += 4;
+            }, // SUB A,E - 0x93
+            0x94 => {
+                self.sub_register_from_register(&Register::A, &Register::H);
+                self.cycles += 4;
+            }, // SUB A,H - 0x94
+            0x95 => {
+                self.sub_register_from_register(&Register::A, &Register::L);
+                self.cycles += 4;
+            }, // SUB A,L - 0x95
+            0x96 => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                self.sub_u8_from_register(&Register::A, memory.read_byte(address));
+                self.cycles += 8;
+            }, // SUB A,(HL) - 0x96
+            0x97 => {
+                self.sub_register_from_register(&Register::A, &Register::A);
+                self.cycles += 4;
+            }, // SUB A,A - 0x97
 
             
             _ => panic!("Unknown opcode: {:#X}", opcode),

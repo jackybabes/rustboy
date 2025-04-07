@@ -111,4 +111,20 @@ impl CPU {
         self.add_u8_to_register_with_carry(lhs, rhs_value);
     }
 
+    pub fn sub_u8_from_register(&mut self, register: &Register, value_to_sub: u8) {
+        let current_value = self.read_register(register);
+        let (result, carry) = current_value.overflowing_sub(value_to_sub);
+        let half_carry = (current_value & 0x0F) < (value_to_sub & 0x0F);
+        self.set_flag(&Flag::N, true);
+        self.set_flag(&Flag::H, half_carry);
+        self.set_flag(&Flag::C, carry);
+        self.set_flag(&Flag::Z, result == 0);
+        self.write_register(register, result);
+    }
+
+    pub fn sub_register_from_register(&mut self, lhs: &Register, rhs: &Register) {
+        let rhs_value = self.read_register(rhs);
+        self.sub_u8_from_register(lhs, rhs_value);
+    }
+
 }
