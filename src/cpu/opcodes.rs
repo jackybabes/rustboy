@@ -798,6 +798,39 @@ impl CPU {
                 self.or_register_with_register(&Register::A, &Register::A);
                 self.cycles += 4;
             }, // OR A,A - 0xB7
+            0xB8 => {
+                self.compare_register_with_register(&Register::A, &Register::B);
+                self.cycles += 4;
+            }, // CP A,B - 0xB8
+            0xB9 => {
+                self.compare_register_with_register(&Register::A, &Register::C);
+                self.cycles += 4;
+            }, // CP A,C - 0xB9
+            0xBA => {
+                self.compare_register_with_register(&Register::A, &Register::D);
+                self.cycles += 4;
+            }, // CP A,D - 0xBA
+            0xBB => {
+                self.compare_register_with_register(&Register::A, &Register::E);
+                self.cycles += 4;
+            }, // CP A,E - 0xBB
+            0xBC => {
+                self.compare_register_with_register(&Register::A, &Register::H);
+                self.cycles += 4;
+            }, // CP A,H - 0xBC
+            0xBD => {
+                self.compare_register_with_register(&Register::A, &Register::L);
+                self.cycles += 4;
+            }, // CP A,L - 0xBD
+            0xBE => {
+                let address = self.read_register_pair(&REGISTER_HL);
+                self.compare_u8_with_register(&Register::A, memory.read_byte(address));
+                self.cycles += 8;
+            }, // CP A,(HL) - 0xBE
+            0xBF => {
+                self.compare_register_with_register(&Register::A, &Register::A);
+                self.cycles += 4;
+            }, // CP A,A - 0xBF
 
 
             _ => panic!("Unknown opcode: {:#X}", opcode),
