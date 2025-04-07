@@ -94,6 +94,13 @@ impl CPU {
         self.write_register(register, result);
     }
 
+    pub fn add_u8_to_register_with_carry(&mut self, register: &Register, value_to_add: u8) {
+        let carry = self.get_flag(&Flag::C);
+        let value = value_to_add.wrapping_add(carry as u8);
+        self.add_u8_to_register(register, value);
+    }
+
+
     pub fn add_register_to_register(&mut self, lhs: &Register, rhs: &Register) {
         let rhs_value = self.read_register(rhs);
         self.add_u8_to_register(lhs, rhs_value);
@@ -101,8 +108,7 @@ impl CPU {
 
     pub fn add_register_to_register_with_carry(&mut self, lhs: &Register, rhs: &Register) {
         let rhs_value = self.read_register(rhs);
-        let carry = self.get_flag(&Flag::C);
-        self.add_u8_to_register(lhs, rhs_value + carry as u8);
+        self.add_u8_to_register_with_carry(lhs, rhs_value);
     }
 
 }

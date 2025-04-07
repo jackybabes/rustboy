@@ -1,7 +1,7 @@
 use super::CPU;
 
 use crate::memory::Memory;
-use super::core::{Register, Flag, REGISTER_AF, REGISTER_BC, REGISTER_DE, REGISTER_HL};
+use super::core::{Register, REGISTER_BC, REGISTER_DE, REGISTER_HL};
 
 impl CPU {
     pub fn execute(&mut self, opcode: u8, memory: &mut Memory) {
@@ -626,9 +626,7 @@ impl CPU {
             }, // ADC A,L - 0x8D
             0x8E => {
                 let address = self.read_register_pair(&REGISTER_HL);
-                let carry = self.get_flag(&Flag::C);
-                let value = memory.read_byte(address) + carry as u8;
-                self.add_u8_to_register(&Register::A, value);
+                self.add_u8_to_register_with_carry(&Register::A, memory.read_byte(address));
                 self.cycles += 8;
             }, // ADC A,(HL) - 0x8E
             0x8F => {
