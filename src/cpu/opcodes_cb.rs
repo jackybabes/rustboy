@@ -36,9 +36,14 @@ impl CPU {
                 let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.shift_right_arithmetic_cb(value));
                 self.cycles += cycles
             }, // Shift right arithmetic
+            0x30..=0x37 => {
+                let index = opcode & 0x07;
+                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.swap_nibbles_cb(value));
+                self.cycles += cycles
+            }, // Swap nibbles
+
 
             
-
             _ => panic!("Invalid CB opcode: {:#X}", opcode),
         }
     }
@@ -149,6 +154,16 @@ impl CPU {
         result
     }
     
+    fn swap_nibbles_cb(&mut self, value: u8) -> u8 {
+        let result = (value >> 4) | (value << 4);
+    
+        self.set_flag(&Flag::Z, result == 0);
+        self.set_flag(&Flag::N, false);
+        self.set_flag(&Flag::H, false);
+        self.set_flag(&Flag::C, false);
+    
+        result
+    }
     
     
         
