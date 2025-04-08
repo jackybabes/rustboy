@@ -1,8 +1,8 @@
 use super::CPU;
 use super::core::{Register, Flag};
-use crate::memory::Memory;
+
 impl CPU {
-    pub fn rotate_left_circular_register(&mut self, register: &Register) {
+    pub fn rotate_left_circular(&mut self, register: &Register) {
         let value = self.read_register(register);
         let carry = value & 0x80 != 0;
         let result = value.rotate_left(1);
@@ -13,16 +13,16 @@ impl CPU {
         self.set_flag(&Flag::C, carry);
     }
 
-    pub fn rotate_left_circular_address(&mut self, address: u16, memory: &mut Memory) {
-        let value = memory.read_byte(address);
-        let carry = value & 0x80 != 0;
-        let result = value.rotate_left(1);
-        memory.write_byte(address, result);
-        self.set_flag(&Flag::Z, false);
-        self.set_flag(&Flag::N, false);
-        self.set_flag(&Flag::H, false);
-        self.set_flag(&Flag::C, carry); 
-    }
+    // pub fn rotate_left_circular_address(&mut self, address: u16, memory: &mut Memory) {
+    //     let value = memory.read_byte(address);
+    //     let carry = value & 0x80 != 0;
+    //     let result = value.rotate_left(1);
+    //     memory.write_byte(address, result);
+    //     self.set_flag(&Flag::Z, false);
+    //     self.set_flag(&Flag::N, false);
+    //     self.set_flag(&Flag::H, false);
+    //     self.set_flag(&Flag::C, carry); 
+    // }
 
 
     pub fn rotate_right_circular(&mut self, register: &Register) {

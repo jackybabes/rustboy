@@ -37,7 +37,7 @@ impl CPU {
                 self.cycles += 8;
             }, //LD B,u8 - 0x06
             0x07 => {
-                self.rotate_left_circular_register(&Register::A);
+                self.rotate_left_circular(&Register::A);
                 self.cycles += 4;
             }, // RLC A - 0x07
             0x08 => {

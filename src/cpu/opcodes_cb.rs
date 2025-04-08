@@ -1,22 +1,23 @@
 use super::CPU;
 
 use crate::memory::Memory;
-use super::core::{Register, REGISTER_HL};
+use super::core::{Register, REGISTER_HL, Flag};
 
 impl CPU {
     pub fn execute_cb_opcode(&mut self, opcode: u8, memory: &mut Memory) {
         match opcode {
             0x00..=0x07 => {
-                let offset= opcode & 0x07;
-                if offset == 0x06 {
-                    let address = self.read_register_pair(&REGISTER_HL);
-                    self.rotate_left_circular_address(address, memory);
-                    self.cycles += 16
-                } else if let Some(register) = self.get_register(offset) {
-                    self.rotate_left_circular_register(&register);
-                    self.cycles += 8;
-                }
+                let index = opcode & 0x07;
+                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.rotate_left_circular_cb(value));
+                self.cycles += cycles
             }, // Rotate left circular
+            0x08..=0x0F => {
+                let index = opcode & 0x07;
+                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.rotate_right_circular_cb(value));
+                self.cycles += cycles
+            }, // Rotate right circular
+            
+
             _ => panic!("Invalid CB opcode: {:#X}", opcode),
         }
     }
@@ -34,6 +35,49 @@ impl CPU {
             _ => panic!("Invalid register index: {:#X}", i),
         }
     }
-    // Similarly define `rl`, `sla`, `swap`, etc.
+
+
+    fn run_operation_on_index<F>(&mut self, memory: &mut Memory, index: u8, mut operation: F) -> u32
+    where
+        F: FnMut(&mut Self, u8) -> u8,
+    {
+        if let Some(register) = self.get_register(index) {
+            let value = self.read_register(&register);
+            let result = operation(self, value);
+            self.write_register(&register, result);
+            return 8;
+        } else {
+            let address = self.read_register_pair(&REGISTER_HL);
+            let value = memory.read_byte(address);
+            let result = operation(self, value);
+            memory.write_byte(address, result);
+            return 16;
+        }
+
+    }
+
+    fn rotate_left_circular_cb(&mut self, value: u8) -> u8{
+        let bit7 = (value & 0x80) != 0;
+        let result = value.rotate_left(1);
+    
+        self.set_flag(&Flag::Z, result == 0);
+        self.set_flag(&Flag::N, false);
+        self.set_flag(&Flag::H, false);
+        self.set_flag(&Flag::C, bit7);
+
+        result
+    }
+
+    fn rotate_right_circular_cb(&mut self, value: u8) -> u8{
+        let bit0 = (value & 0x01) != 0;
+        let result = value.rotate_right(1);
+
+        self.set_flag(&Flag::Z, result == 0);
+        self.set_flag(&Flag::N, false);
+        self.set_flag(&Flag::H, false);
+        self.set_flag(&Flag::C, bit0);
+
+        result
+    }
 
 }
