@@ -138,4 +138,21 @@ impl CPU {
         self.sub_u8_from_register_with_carry(lhs, rhs_value);
     }
 
+    pub fn add_i8_to_sp(&mut self, offset: u8, sp: u16) -> u16 {
+        let signed = offset as i8 as i16;
+        let result = (sp as i16).wrapping_add(signed) as u16;
+    
+        // Flags are based on the lower byte
+        let u_sp = sp;
+        let u_val = signed as u16;
+    
+        self.set_flag(&Flag::Z, false);
+        self.set_flag(&Flag::N, false);
+        self.set_flag(&Flag::H, ((u_sp & 0xF) + (u_val & 0xF)) > 0xF);
+        self.set_flag(&Flag::C, ((u_sp & 0xFF) + (u_val & 0xFF)) > 0xFF);
+    
+        result
+    }
+    
+
 }

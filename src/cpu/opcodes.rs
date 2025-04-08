@@ -1,3 +1,5 @@
+use core::panic;
+
 use super::CPU;
 
 use crate::memory::Memory;
@@ -1039,12 +1041,95 @@ impl CPU {
                 self.call(memory, 0x18);
                 self.cycles += 16;
             }, // RST 18H - 0xDF
-            
-            
-            
-            
 
+            0xE0 => {
+                let offset = self.fetch_byte(memory);
+                let address = 0xFF00 as u16 + offset as u16;
+                let value = self.read_register(&Register::A);
+                memory.write_byte(address, value);
+                self.cycles += 12;
+            }, // LD (FF00+n),A - 0xE0
 
+            0xE1 => {
+                let value = self.pop_u16(memory);
+                self.write_register_pair(&REGISTER_HL, value);
+                self.cycles += 12;
+            }, // POP HL - 0xE1
+
+            0xE2 => {
+                let address = 0xFF00 as u16 + self.read_register(&Register::C) as u16;
+                let value =  self.read_register(&Register::A);
+                memory.write_byte(address, value);
+                self.cycles += 12;
+            }, // LD (FF00+C),A - 0xE2
+
+            0xE3 => {
+                panic!("0xE3 Unused");
+            }, // Unused
+
+            0xE4 => {
+                panic!("0xE4 Unused");
+            }, // Unused
+
+            0xE5 => {
+                self.push_u16(memory, self.read_register_pair(&REGISTER_HL));
+                self.cycles += 16;
+            }, // PUSH HL - 0xE5
+
+            0xE6 => {
+                let value = self.fetch_byte(&memory);
+                self.and_u8_with_register(&Register::A, value);
+                self.cycles += 8;
+            }, // AND n - 0xE6
+
+            0xE7 => {
+                self.call(memory, 0x20);
+                self.cycles += 16;
+            }, // RST 20H - 0xE7
+
+            0xE8 => {
+                let offset = self.fetch_byte(&memory);
+                self.sp = self.add_i8_to_sp(offset, self.sp);
+                self.cycles += 12;
+            }, // ADD SP,i8 - 0xE8
+
+            0xE9 => {
+                self.jump_to_address(self.read_register_pair(&REGISTER_HL));
+                self.cycles += 4;
+            }, // JP (HL) - 0xE9
+
+            0xEA => {
+                let address = self.fetch_word(&memory);
+                let value = self.read_register(&Register::A);
+                memory.write_byte(address, value);
+                self.cycles += 16;
+            }, // LD (nn),A - 0xEA
+
+            0xEB => {
+                panic!("0xEB Unused");
+            },
+
+            0xEC => {
+                panic!("0xEC Unused");
+            },
+
+            0xED => {
+                panic!("0xED Unused");
+            },
+
+            0xEE => {
+                let value = self.fetch_byte(memory);
+                self.xor_u8_with_register(&Register::A, value);
+                self.cycles += 8;
+            }, // XOR n - 0xEE
+
+            0xEF => {
+                self.call(memory, 0x28);
+                self.cycles += 16;
+            }, // RST 28H - 0xEF
+
+            
+            
             _ => panic!("Unknown opcode: {:#X}", opcode),
         }
     }
