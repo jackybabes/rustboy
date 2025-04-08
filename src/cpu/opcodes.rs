@@ -940,6 +940,109 @@ impl CPU {
                 self.cycles += 16;
             }, // RST 08H - 0xCF
 
+            0xD0 => {
+                if self.execute_if_flag_set_to_condition(false, &Flag::C, |cpu, memory| cpu.ret(memory), memory) {
+                    self.cycles += 20;
+                } else {
+                    self.cycles += 8;
+                }
+            }, // RET NC - 0xD0
+            0xD1 => {
+                let value = self.pop_u16(memory);
+                self.write_register_pair(&REGISTER_DE, value);
+                self.cycles += 12;
+            }, // POP DE - 0xD1
+
+            0xD2 => {
+                let address = self.fetch_word(&memory);
+                if self.execute_if_flag_set_to_condition(false, &Flag::C, |cpu, _memory| cpu.jump_to_address(address), memory) {
+                    self.cycles += 16;
+                } else {
+                    self.cycles += 12;
+                }
+            }, // JP NC,nn - 0xD2
+
+            0xD3 => {
+                panic!("0xD3 Unused");
+            }, // Unused
+
+            0xD4 => {
+                let address = self.fetch_word(&memory);
+                if self.execute_if_flag_set_to_condition(false, &Flag::C, |cpu, memory| cpu.call(memory, address), memory) {
+                    self.cycles += 24;
+                } else {
+                    self.cycles += 12;
+                }
+            }, // CALL NC,nn - 0xD4
+
+            0xD5 => {
+                self.push_u16(memory, self.read_register_pair(&REGISTER_DE));
+                self.cycles += 16;
+            }, // PUSH DE - 0xD5
+
+            0xD6 => {
+                let value = self.fetch_byte(&memory);
+                self.sub_u8_from_register(&Register::A, value);
+                self.cycles += 8;
+            }, // SUB A,n - 0xD6
+
+            0xD7 => {
+                self.call(memory, 0x10);
+                self.cycles += 16;
+            }, // RST 10H - 0xD7
+
+            0xD8 => {
+                if self.execute_if_flag_set_to_condition(true, &Flag::C, |cpu, memory| cpu.ret(memory), memory) {
+                    self.cycles += 20;
+                } else {
+                    self.cycles += 8;
+                }
+            }, // RET C - 0xD8
+
+            0xD9 => {
+                panic!("0xD9 not implemented - RETI");
+            }, // RETI - 0xD9
+
+            0xDA => {
+                let address = self.fetch_word(&memory);
+                if self.execute_if_flag_set_to_condition(true, &Flag::C, |cpu, _memory| cpu.jump_to_address(address), memory) {
+                    self.cycles += 16;
+                } else {
+                    self.cycles += 12;
+                }
+            }, // JP C,nn - 0xDA
+
+            0xDB => {
+                panic!("0xDB Unused");
+            }, // Unused
+
+            0xDC => {
+                let address = self.fetch_word(&memory);
+                if self.execute_if_flag_set_to_condition(true, &Flag::C, |cpu, memory| cpu.call(memory, address), memory) {
+                    self.cycles += 24;
+                } else {
+                    self.cycles += 12;
+                }
+            }, // CALL C,nn - 0xDC
+
+            0xDD => {
+                panic!("0xDD Unused");
+            }, // Unused
+
+            0xDE => {
+                let value = self.fetch_byte(&memory);
+                self.sub_u8_from_register_with_carry(&Register::A, value);
+                self.cycles += 8;
+            }, // SBC A,n - 0xDE
+
+            0xDF => {
+                self.call(memory, 0x18);
+                self.cycles += 16;
+            }, // RST 18H - 0xDF
+            
+            
+            
+            
 
 
             _ => panic!("Unknown opcode: {:#X}", opcode),
