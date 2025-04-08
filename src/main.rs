@@ -9,13 +9,10 @@ fn main() {
     let mut cpu = CPU::new();
     let mut memory = Memory::new();
 
-    memory.write_byte(0x0100, 0x00);
+    memory.write_byte(0x0100, 0xCB);
 
-    memory.write_byte(0x0101, 0xC4);
-    memory.write_byte(0x0102, 0x00);
-    memory.write_byte(0x0103, 0x02);
+    memory.write_byte(0x0101, 0x00);
 
-    memory.write_byte(0x0200, 0xC9);
 
 
 

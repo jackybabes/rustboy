@@ -37,7 +37,7 @@ impl CPU {
                 self.cycles += 8;
             }, //LD B,u8 - 0x06
             0x07 => {
-                self.rotate_left_circular(&Register::A);
+                self.rotate_left_circular_register(&Register::A);
                 self.cycles += 4;
             }, // RLC A - 0x07
             0x08 => {
@@ -912,7 +912,8 @@ impl CPU {
 
             0xCB => {
                 // PREFIX CB
-                panic!("CB prefix not implemented");
+                let opcode = self.fetch_byte(memory);
+                self.execute_cb_opcode(opcode, memory);
             }, // PREFIX CB - 0xCB
 
             0xCC => {
