@@ -3,7 +3,7 @@ use core::panic;
 use super::CPU;
 
 use crate::memory::Memory;
-use super::core::{Register, REGISTER_BC, REGISTER_DE, REGISTER_HL, Flag};
+use super::core::{Register, REGISTER_BC, REGISTER_DE, REGISTER_HL, Flag, REGISTER_AF};
 
 impl CPU {
     pub fn execute(&mut self, opcode: u8, memory: &mut Memory) {
@@ -1060,7 +1060,7 @@ impl CPU {
                 let address = 0xFF00 as u16 + self.read_register(&Register::C) as u16;
                 let value =  self.read_register(&Register::A);
                 memory.write_byte(address, value);
-                self.cycles += 12;
+                self.cycles += 8;
             }, // LD (FF00+C),A - 0xE2
 
             0xE3 => {
@@ -1128,9 +1128,92 @@ impl CPU {
                 self.cycles += 16;
             }, // RST 28H - 0xEF
 
-            
-            
-            _ => panic!("Unknown opcode: {:#X}", opcode),
+            0xF0 => {
+                let offset = self.fetch_byte(memory);
+                let address = 0xFF00 as u16 + offset as u16;
+                let value = memory.read_byte(address);
+                self.write_register(&Register::A, value);
+                self.cycles += 12;
+            }, // LD A,(FF00+n) - 0xF0
+
+            0xF1 => {
+                let value = self.pop_u16(memory);
+                self.write_register_pair(&REGISTER_AF, value);
+                self.cycles += 12;
+            }, // POP AF - 0xF1
+
+            0xF2 => {
+                let address = 0xFF00 as u16 + self.read_register(&Register::C) as u16;
+                let value = self.read_register(&Register::A);
+                memory.write_byte(address, value);
+                self.cycles += 8;
+            }, // LD A,(FF00+C) - 0xF2
+
+            0xF3 => {
+                panic!("0xF3 Not implmented - disbale interupts");
+            }, 
+
+            0xF4 => {
+                panic!("0xF4 Unused");
+            },
+
+            0xF5 => {
+                self.push_u16(memory, self.read_register_pair(&REGISTER_AF));
+                self.cycles += 16;
+            }, // PUSH AF - 0xF5
+
+            0xF6 => {
+                let value = self.fetch_byte(&memory);
+                self.or_u8_with_register(&Register::A, value);
+                self.cycles += 8;
+            }, // OR n - 0xF6
+
+            0xF7 => {
+                self.call(memory, 0x30);
+                self.cycles += 16;
+            }, // RST 30H - 0xF7
+
+            0xF8 => {
+                let offset = self.fetch_byte(&memory);
+                let value = self.add_i8_to_sp(offset, self.sp);
+                self.write_register_pair(&REGISTER_HL, value);
+                self.cycles += 12;
+            }, // LD HL,SP+i8 - 0xF8
+
+            0xF9 => {
+                self.sp = self.read_register_pair(&REGISTER_HL);
+                self.cycles += 8;
+            }, // LD SP,HL - 0xF9
+
+            0xFA => {
+                let address = self.fetch_word(&memory);
+                let value = memory.read_byte(address);
+                self.write_register(&Register::A, value);
+                self.cycles += 16;
+            }, // LD A,(nn) - 0xFA
+
+            0xFB => {
+                panic!("0xFB Not implemented - enable interupts");
+            },
+
+            0xFC => {
+                panic!("0xFC Unused");
+            },
+
+            0xFD => {
+                panic!("0xFD Unused");
+            },
+
+            0xFE => {
+                let value = self.fetch_byte(&memory);
+                self.compare_u8_with_register(&Register::A, value);
+                self.cycles += 8;
+            }, // CP n - 0xFE
+
+            0xFF => {
+                self.call(memory, 0x38);
+                self.cycles += 16;
+            }, // RST 38H - 0xFF
         }
     }
 }
