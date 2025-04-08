@@ -41,6 +41,11 @@ impl CPU {
                 let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.swap_nibbles_cb(value));
                 self.cycles += cycles
             }, // Swap nibbles
+            0x38..=0x3F => {
+                let index = opcode & 0x07;
+                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.shift_right_logical_cb(value));
+                self.cycles += cycles
+            }, // Shift right logical
 
 
             
@@ -144,7 +149,8 @@ impl CPU {
 
     fn shift_right_arithmetic_cb(&mut self, value: u8) -> u8 {
         let bit0 = (value & 0x01) != 0;
-        let result = value >> 1;
+        let bit7 = value & 0x80;
+        let result = (value >> 1) | (bit7 as u8);
     
         self.set_flag(&Flag::Z, result == 0);
         self.set_flag(&Flag::N, false);
@@ -164,8 +170,18 @@ impl CPU {
     
         result
     }
+
+    fn shift_right_logical_cb(&mut self, value: u8) -> u8 {
+        let bit0 = (value & 0x01) != 0;
+        let result = value >> 1;
     
+        self.set_flag(&Flag::Z, result == 0);
+        self.set_flag(&Flag::N, false);
+        self.set_flag(&Flag::H, false);
+        self.set_flag(&Flag::C, bit0);
     
+        result
+    }
         
 
 }
