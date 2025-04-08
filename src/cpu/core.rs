@@ -136,4 +136,24 @@ impl CPU {
         let high_byte = self.fetch_byte(memory);
         ((high_byte as u16) << 8) | (low_byte as u16)
     }
+
+    pub fn pop_u16(&mut self, memory: &mut Memory) -> u16 {
+        let low_byte = memory.read_byte(self.sp);
+        self.sp += 1;
+        let high_byte = memory.read_byte(self.sp);
+        self.sp += 1;
+    
+        ((high_byte as u16) << 8) | (low_byte as u16)
+    }
+
+    pub fn push_u16(&mut self, memory: &mut Memory, value: u16) {
+        let high_byte = (value >> 8) as u8;
+        let low_byte = value as u8;
+    
+        self.sp -= 1;
+        memory.write_byte(self.sp, high_byte); // High byte goes first
+        self.sp -= 1;
+        memory.write_byte(self.sp, low_byte);  // Then low byte
+    }
+    
 }

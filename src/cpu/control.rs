@@ -1,5 +1,6 @@
 use super::CPU;
 use super::core::Flag;
+use crate::memory::Memory;
 
 impl CPU {
     pub fn jump_relative(&mut self, offset: i8) {
@@ -40,5 +41,29 @@ impl CPU {
             self.jump_relative(offset);
             true
         }
+    }
+
+    pub fn call(&mut self, memory: &mut Memory, address: u16) {
+        self.push_u16(memory, self.pc);
+        self.pc = address;
+    }
+
+    pub fn ret(&mut self, memory: &mut Memory) {
+        self.pc = self.pop_u16(memory);
+    }
+
+    pub fn jump_to_address(&mut self, address: u16) {
+        self.pc = address;
+    }
+
+    pub fn execute_if_flag_set_to_condition<F>(&mut self, condition: bool, flag: &Flag, func: F, memory: &mut Memory) -> bool 
+    where 
+        F: FnOnce(&mut Self, &mut Memory),
+    {
+        if self.get_flag(flag) == condition {
+            func(self, memory);
+            return true;
+        }
+        false
     }
 }

@@ -1,5 +1,5 @@
 pub mod core;
-pub mod jump;
+pub mod control;
 pub mod opcodes;
 pub mod arithmetic;
 pub mod bit;

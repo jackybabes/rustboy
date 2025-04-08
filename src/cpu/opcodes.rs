@@ -1,7 +1,7 @@
 use super::CPU;
 
 use crate::memory::Memory;
-use super::core::{Register, REGISTER_BC, REGISTER_DE, REGISTER_HL};
+use super::core::{Register, REGISTER_BC, REGISTER_DE, REGISTER_HL, Flag};
 
 impl CPU {
     pub fn execute(&mut self, opcode: u8, memory: &mut Memory) {
@@ -831,6 +831,115 @@ impl CPU {
                 self.compare_register_with_register(&Register::A, &Register::A);
                 self.cycles += 4;
             }, // CP A,A - 0xBF
+
+            0xC0 => {
+                if self.execute_if_flag_set_to_condition(false, &Flag::Z, |cpu, memory| cpu.ret(memory), memory) {
+                    self.cycles += 20;
+                } else {
+                    self.cycles += 8;
+                }
+            }, // RET NZ - 0xC0
+
+            0xC1 => {
+                let value = self.pop_u16(memory);
+                self.write_register_pair(&REGISTER_BC, value);
+                self.cycles += 12;
+            }, // POP BC - 0xC1
+
+            0xC2 => {
+                let address = self.fetch_word(&memory);
+                if self.execute_if_flag_set_to_condition(false, &Flag::Z, |cpu, _memory| cpu.jump_to_address(address), memory) {
+                    self.cycles += 16;
+                } else {
+                    self.cycles += 12;
+                }
+            }, // JP NZ,nn - 0xC2
+
+            0xC3 => {
+                let address = self.fetch_word(&memory);
+                self.jump_to_address(address);
+                self.cycles += 16;
+            }, // JP nn - 0xC3
+
+            0xC4 => {
+                let address = self.fetch_word(&memory);
+                if self.execute_if_flag_set_to_condition(false, &Flag::Z, |cpu, memory| cpu.call(memory, address), memory) {
+                    self.cycles += 24;
+                } else {
+                    self.cycles += 12;
+                }
+            }, // CALL NZ,nn - 0xC4
+
+            0xC5 => {
+                self.push_u16(memory, self.read_register_pair(&REGISTER_BC));
+                self.cycles += 16;
+            }, // PUSH BC - 0xC5
+
+            0xC6 => {
+                let value = self.fetch_byte(&memory);
+                self.add_u8_to_register(&Register::A, value);
+                self.cycles += 8;
+            }, // ADD A,n - 0xC6
+
+            0xC7 => {
+                self.pc = 0x00;
+                self.cycles += 16;
+            }, // RST 00H - 0xC7
+
+            0xC8 => {
+                if self.execute_if_flag_set_to_condition(true, &Flag::Z, |cpu, memory| cpu.ret(memory), memory) {
+                    self.cycles += 20;
+                } else {
+                    self.cycles += 8;
+                }
+            }, // RET Z - 0xC8
+
+            0xC9 => {
+                self.ret(memory);
+                self.cycles += 16;
+            }, // RET - 0xC9
+
+            0xCA => {
+                let address= self.fetch_word(memory);
+                if self.execute_if_flag_set_to_condition(true, &Flag::Z, |cpu, _memory| cpu.jump_to_address(address), memory) {
+                    self.cycles += 16;
+                } else {
+                    self.cycles += 12;
+                }
+            }, // JP Z,nn - 0xCA
+
+            0xCB => {
+                // PREFIX CB
+                panic!("CB prefix not implemented");
+            }, // PREFIX CB - 0xCB
+
+            0xCC => {
+                let address = self.fetch_word(&memory);
+                if self.execute_if_flag_set_to_condition(true, &Flag::Z, |cpu, memory| cpu.call(memory, address), memory) {
+                    self.cycles += 24;
+                } else {
+                    self.cycles += 12;
+                }
+            }, // CALL Z,nn - 0xCC
+
+            0xCD => {
+                let address = self.fetch_word(&memory);
+                self.call(memory, address);
+                self.cycles += 24;
+            }, // CALL nn - 0xCD
+
+            0xCE => {
+                let value = self.fetch_byte(&memory);
+                self.add_u8_to_register_with_carry(&Register::A, value);
+                self.cycles += 8;
+            }, // ADC A,n - 0xCE
+
+
+            0xCF => {
+                self.call(memory, 0x08);
+                self.cycles += 16;
+            }, // RST 08H - 0xCF
+
 
 
             _ => panic!("Unknown opcode: {:#X}", opcode),
