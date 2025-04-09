@@ -1,5 +1,3 @@
-use core::panic;
-
 use super::CPU;
 
 use crate::memory::Memory;
@@ -76,7 +74,12 @@ impl CPU {
                 self.cycles += 4;
             }, // RRC A - 0x0F
             0x10 => {
-                panic!("STOP instruction not implemented");
+                let byte = self.fetch_byte(memory);
+                if byte != 0x00 {
+                    panic!("STOP instruction expects null afterwards");
+                }
+                println!("STOP instruction");
+                self.cycles += 4;
             }, // STOP - 0x10
             0x11 => {
                 let word = self.fetch_word(memory);
@@ -181,7 +184,8 @@ impl CPU {
                 self.cycles += 8;
             }, // LD H,u8 - 0x26
             0x27 => {
-                panic!("DA A - 0x27 not implemented");
+                self.daa(&Register::A);
+                self.cycles += 4;
             }, // DA A - 0x27
             0x28 => {
                 let offset = self.fetch_byte(memory) as i8;
@@ -260,7 +264,8 @@ impl CPU {
                 self.cycles += 12;
             }, // LD (HL),u8 - 0x36
             0x37 => {
-                panic!("SCF - 0x37 not implemented");
+                self.set_carry_flag();
+                self.cycles += 4;
             }, // SCF - 0x37
             0x38 => {
                 let offset = self.fetch_byte(memory) as i8;

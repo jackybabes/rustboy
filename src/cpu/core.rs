@@ -32,6 +32,14 @@ pub const REGISTER_HL: RegisterPair = RegisterPair { first: Register::H, second:
 pub const REGISTER_BC: RegisterPair = RegisterPair { first: Register::B, second: Register::C };
 pub const REGISTER_DE: RegisterPair = RegisterPair { first: Register::D, second: Register::E }; 
 
+
+// pub struct Interrupts {
+//     pub ie: u8,                   // Interrupt Enable Register (0xFFFF)
+//     pub if_: u8,                  // Interrupt Flag Register (0xFF0F)
+//     pub ime: bool,                // Interrupt Master Enable flag
+//     pub enable_ime_next: bool,    // Delayed EI effect
+// }
+
 // Define CPU registers
 pub struct CPU {
     pub a: u8, pub f: u8, // Accumulator & Flags

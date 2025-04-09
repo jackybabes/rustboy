@@ -153,6 +153,33 @@ impl CPU {
     
         result
     }
+pub fn daa(&mut self, register: &Register) {
+    let mut adjustment = 0;
+    let value = self.read_register(register);
+
+    // Check if the lower nibble (4 bits) is greater than 9 or if the H flag is set
+    if (value & 0x0F) > 0x09 || self.get_flag(&Flag::H) {
+        adjustment |= 0x06; // Add 6 to the lower nibble
+    }
+
+    // Check if the upper nibble (4 bits) is greater than 9 or if the C flag is set
+    if (value & 0xF0) > 0x90 || self.get_flag(&Flag::C) {
+        adjustment |= 0x60; // Add 6 to the upper nibble
+        self.set_flag(&Flag::C, true); // Set the carry flag
+    } else {
+        self.set_flag(&Flag::C, false); // Clear the carry flag
+    }
+
+    // Apply the adjustment
+    self.write_register(register, value.wrapping_add(adjustment));
+
+    // Set the Z flag if the result is zero
+    self.set_flag(&Flag::Z, self.read_register(register) == 0);
+    // Clear the N flag
+    self.set_flag(&Flag::N, false);
+    // Clear the H flag
+    self.set_flag(&Flag::H, false);
+}
     
 
 }

@@ -66,4 +66,10 @@ impl CPU {
         }
         false
     }
+
+    pub fn set_carry_flag(&mut self) {
+        self.set_flag(&Flag::C, true);
+        self.set_flag(&Flag::H, false);
+        self.set_flag(&Flag::N, false);
+    }
 }
