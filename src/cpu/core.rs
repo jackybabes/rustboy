@@ -163,5 +163,16 @@ impl CPU {
         self.sp -= 1;
         memory.write_byte(self.sp, low_byte);  // Then low byte
     }
+
+    // Serial I/O emulation
+// Called when memory[0xFF02] == 0x81
+    pub fn handle_serial_for_test_rom(&mut self, memory: &mut Memory) {
+        let control = memory.read_byte(0xFF02);
+        if control == 0x81 {
+            let byte = memory.read_byte(0xFF01);
+            print!("{}", byte as char); // Output to console
+            memory.write_byte(0xFF02, 0x00); // Reset
+        }
+    }
     
 }
