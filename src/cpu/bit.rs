@@ -50,13 +50,14 @@ impl CPU {
         let value = self.read_register(register);
         let old_carry = self.get_flag(&Flag::C);
         let new_carry = value & 0x01 != 0;
-        let result = (value >> 1) | (old_carry as u8);
+        let result = (value >> 1) | (old_carry as u8) << 7;
         self.write_register(register, result);
         self.set_flag(&Flag::Z, false);
         self.set_flag(&Flag::N, false);
         self.set_flag(&Flag::H, false);
         self.set_flag(&Flag::C, new_carry);
     }
+
     pub fn complement_register(&mut self, register: &Register) {
         let value = self.read_register(register);
         let result = !value;
