@@ -16,10 +16,11 @@ impl CPU {
     pub fn decrement_register(&mut self, register: &Register) {
         let value = self.read_register(register);
         let result = value.wrapping_sub(1);
+        let half_carry = (value & 0x0F) == 0x00;
         self.write_register(register, result);
         self.set_flag(&Flag::Z, result == 0);
         self.set_flag(&Flag::N, true);
-        self.set_flag(&Flag::H, (value & 0x0F) == 0x0F);
+        self.set_flag(&Flag::H, half_carry);
     }
 
     pub fn increment_register_pair(&mut self, register_pair: &RegisterPair) {
