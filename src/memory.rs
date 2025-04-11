@@ -1,3 +1,5 @@
+use crate::data::HardwareRegister;
+
 // Start	End	Description	Notes
 // 0000	3FFF	16 KiB ROM bank 00	From cartridge, usually a fixed bank
 // 4000	7FFF	16 KiB ROM Bank 01–NN	From cartridge, switchable bank via mapper (if any)
@@ -21,6 +23,10 @@ impl Memory {
     }
 
     pub fn read_byte(&self, address: u16) -> u8 {
+        // For test rom
+        if address == HardwareRegister::LY as u16 {
+            return 0x90;
+        }
         self.data[address as usize]
     }
 
@@ -31,6 +37,14 @@ impl Memory {
     pub fn write_word(&mut self, address: u16, value: u16) {
         self.data[address as usize] = (value & 0xFF) as u8;
         self.data[address as usize + 1] = (value >> 8) as u8;
+    }
+
+    pub fn read_hardware_register(&self, register: HardwareRegister) -> u8 {
+        self.data[register as usize]
+    }
+
+    pub fn write_hardware_register(&mut self, register: HardwareRegister, value: u8) {
+        self.data[register as usize] = value;
     }
 
     pub fn load_test_rom(&mut self) {

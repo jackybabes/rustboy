@@ -88,15 +88,15 @@ impl CPU {
         }
     }
     pub fn read_register_pair(&self, register_pair: &RegisterPair) -> u16 {
-        let first = self.read_register(&register_pair.first);
-        let second = self.read_register(&register_pair.second);
-        ((second as u16) << 8) | (first as u16)
+        let high_byte = self.read_register(&register_pair.first);
+        let low_byte = self.read_register(&register_pair.second);
+        ((high_byte as u16) << 8) | (low_byte as u16)
     }
     pub fn write_register_pair(&mut self, register_pair: &RegisterPair, value: u16) {
-        let first = (value >> 8) as u8;
-        let second = value as u8;
-        self.write_register(&register_pair.first, first);
-        self.write_register(&register_pair.second, second);
+        let high = (value >> 8) as u8;
+        let low = value as u8;
+        self.write_register(&register_pair.first, high);
+        self.write_register(&register_pair.second, low);
     }
 }
 
@@ -184,6 +184,29 @@ impl CPU {
             print!("{}", byte as char); // Output to console
             memory.write_byte(0xFF02, 0x00); // Reset
         }
+    }
+
+    pub fn print_gameboy_doc_output(&mut self, memory: &mut Memory) {
+        println!("A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X}", 
+            self.a, self.f, self.b, self.c, self.d, self.e, self.h, self.l, 
+            self.sp, self.pc, 
+            memory.read_byte(self.pc),
+            memory.read_byte(self.pc + 1),
+            memory.read_byte(self.pc + 2),
+            memory.read_byte(self.pc + 3));
+    }
+
+    pub fn set_varibles_for_gb_doc(&mut self) {
+        self.a = 0x01;
+        self.f = 0xB0;
+        self.b = 0x00;
+        self.c = 0x13;
+        self.d = 0x00;
+        self.e = 0xD8;
+        self.h = 0x01;
+        self.l = 0x4D;
+        self.sp = 0xFFFE;
+        self.pc = 0x0100;
     }
     
 }
