@@ -66,7 +66,7 @@ impl CPU {
         memory.write_byte(address, result);
         self.set_flag(&Flag::Z, result == 0);
         self.set_flag(&Flag::N, true);
-        self.set_flag(&Flag::H, (value & 0x0F) == 0x0F);
+        self.set_flag(&Flag::H, (value & 0x0F) == 0x00);
     }
 
     pub fn decrement_byte_pointed_by_register_pair(&mut self, memory: &mut Memory, register_pair: &RegisterPair) {
