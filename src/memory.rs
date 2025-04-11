@@ -27,6 +27,7 @@ impl Memory {
         if address == HardwareRegister::LY as u16 {
             return 0x90;
         }
+        // testing above
         self.data[address as usize]
     }
 

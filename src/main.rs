@@ -37,23 +37,7 @@ impl GameBoy {
 
     pub fn step(&mut self) {
 
-        if self.cpu.interrupts.ime {
-            let ie = self.memory.read_hardware_register(HardwareRegister::IE);
-            let mut if_ = self.memory.read_hardware_register(HardwareRegister::IF);
-            let triggered = ie & if_;
-            
-            if triggered != 0 {
-                for i in 0..5 {
-                    if triggered & (1 << i) != 0 {
-                        self.handle_interrupt(i);
-                        if_ &= !(1 << i);
-                        self.memory.write_hardware_register(HardwareRegister::IE, if_);
-                        self.cpu.interrupts.ime = false;
-                        return;
-                    }
-                }
-            }
-        } else if self.cpu.is_halted {
+        if self.cpu.is_halted {
             // ⚠️ Special case: HALT bug
             let ie = self.memory.read_hardware_register(HardwareRegister::IE);
             let iflag = self.memory.read_hardware_register(HardwareRegister::IF);
@@ -84,6 +68,23 @@ impl GameBoy {
 
         // print chars for blarg test roms
         // self.cpu.handle_serial_for_test_rom(&mut self.memory);
+        if self.cpu.interrupts.ime {
+            let ie = self.memory.read_hardware_register(HardwareRegister::IE);
+            let mut if_ = self.memory.read_hardware_register(HardwareRegister::IF);
+            let triggered = ie & if_;
+            
+            if triggered != 0 {
+                for i in 0..5 {
+                    if triggered & (1 << i) != 0 {
+                        self.handle_interrupt(i);
+                        if_ &= !(1 << i);
+                        self.memory.write_hardware_register(HardwareRegister::IF, if_);
+                        self.cpu.interrupts.ime = false;
+                        return;
+                    }
+                }
+            }
+        } 
     }
     
 }
@@ -96,7 +97,7 @@ fn main() {
 
 
 
-    for _ in 0..10000000 {
+    for _ in 0..1000000 {
         gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
         // Emulation loop (one step for now)
         gameboy.step();
