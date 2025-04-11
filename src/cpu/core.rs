@@ -33,12 +33,12 @@ pub const REGISTER_BC: RegisterPair = RegisterPair { first: Register::B, second:
 pub const REGISTER_DE: RegisterPair = RegisterPair { first: Register::D, second: Register::E }; 
 
 
-// pub struct Interrupts {
-//     pub ie: u8,                   // Interrupt Enable Register (0xFFFF)
-//     pub if_: u8,                  // Interrupt Flag Register (0xFF0F)
-//     pub ime: bool,                // Interrupt Master Enable flag
-//     pub enable_ime_next: bool,    // Delayed EI effect
-// }
+pub struct Interrupts {
+    pub ie: u8,                   // Interrupt Enable Register (0xFFFF)
+    pub if_: u8,                  // Interrupt Flag Register (0xFF0F)
+    pub ime: bool,                // Interrupt Master Enable flag
+    pub enable_ime_next: bool,    // Delayed EI effect
+}
 
 // Define CPU registers
 pub struct CPU {
@@ -49,6 +49,9 @@ pub struct CPU {
     pub sp: u16, // Stack Pointer
     pub pc: u16, // Program Counter
     pub cycles: u32, // Cycles
+    pub interrupts: Interrupts,
+    pub is_halted: bool,
+    pub is_stopped: bool,
 }
 
 impl std::fmt::Display for CPU {
@@ -107,6 +110,14 @@ impl CPU {
             sp: 0xFFFE,
             pc: 0x0100,
             cycles: 0,
+            is_halted: false,
+            is_stopped: false,
+            interrupts: Interrupts {
+                ie: 0,
+                if_: 0,
+                ime: false,
+                enable_ime_next: false,
+            },
         }
     }
 

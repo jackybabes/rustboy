@@ -32,9 +32,9 @@ impl Memory {
         self.data[address as usize] = (value & 0xFF) as u8;
         self.data[address as usize + 1] = (value >> 8) as u8;
     }
-    
+
     pub fn load_test_rom(&mut self) {
-        let rom = include_bytes!("../cpu_instrs.gb");
+        let rom = include_bytes!("../06-ld r,r.gb");
         for (i, byte) in rom.iter().enumerate() {
             self.data[i] = *byte;
         }
