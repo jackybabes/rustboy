@@ -96,7 +96,7 @@ fn main() {
 
 
 
-    for _ in 0..1000000 {
+    for _ in 0..10000000 {
         gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
         // Emulation loop (one step for now)
         gameboy.step();

@@ -48,7 +48,7 @@ impl Memory {
     }
 
     pub fn load_test_rom(&mut self) {
-        let rom = include_bytes!("../roms/01-special.gb");
+        let rom = include_bytes!("../roms/02-interrupts.gb");
         for (i, byte) in rom.iter().enumerate() {
             self.data[i] = *byte;
         }
