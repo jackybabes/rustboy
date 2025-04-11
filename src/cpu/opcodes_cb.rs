@@ -88,7 +88,7 @@ impl CPU {
     }
 
 
-    fn run_operation_on_index<F>(&mut self, memory: &mut Memory, index: u8, mut operation: F) -> u32
+    fn run_operation_on_index<F>(&mut self, memory: &mut Memory, index: u8, mut operation: F) -> u64
     where
         F: FnMut(&mut Self, u8) -> u8,
     {
@@ -106,7 +106,7 @@ impl CPU {
         }
     }
 
-    fn run_bit_res_set_operation_on_index<F>(&mut self, memory: &mut Memory, index: u8, bit: u8, mut operation: F, hl_cycles: u32) -> u32
+    fn run_bit_res_set_operation_on_index<F>(&mut self, memory: &mut Memory, index: u8, bit: u8, mut operation: F, hl_cycles: u64) -> u64
     where
         F: FnMut(&mut Self, u8, u8) -> u8,
     {
