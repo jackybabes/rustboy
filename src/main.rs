@@ -5,39 +5,49 @@ mod memory;
 use memory::Memory;
 
 
-fn main() {
-    let mut cpu = CPU::new();
-    let mut memory = Memory::new();
+pub struct GameBoy {
+    pub cpu: CPU,
+    pub memory: Memory,
+}
 
-    // memory.write_byte(0x0100, 0x04);
+impl GameBoy {
+    pub fn new() -> Self {
+        GameBoy {
+            cpu: CPU::new(),
+            memory: Memory::new(),
+        }
+    }
 
-    // memory.write_byte(0x0101, 0xCB);
+    pub fn step(&mut self) {
 
-    // memory.write_byte(0x0102, 0xC0);
-
-    // memory.write_byte(0x0103, 0xCB);
-    // memory.write_byte(0x0104, 0x80);
-
-    // memory.write_byte(0x0105, 0x00);
-    memory.load_test_rom();
-
-
-
-
-
-    for _ in 0..10 {
-        // Emulation loop (one step for now)
-        let opcode = cpu.fetch_byte(&memory);
+        // get next op code
+        let opcode = self.cpu.fetch_byte(&self.memory);
         println!("0x{:02X}", opcode);
-        cpu.execute(opcode, &mut memory);
-        println!("{}", cpu);
-        cpu.handle_serial_for_test_rom(&mut memory);
+        
+        // execute op code  
+        self.cpu.execute(opcode, &mut self.memory);
+        println!("{}", self.cpu);
 
-        // println!("Register B in binary: {:08b}", cpu.b);
+        // print chars for blarg test roms
+        self.cpu.handle_serial_for_test_rom(&mut self.memory);
+    }
+    
+}
+
+fn main() {
+    let mut gameboy = GameBoy::new();
+
+    gameboy.memory.load_test_rom();
+
+
+
+    for _ in 0..100 {
+        // Emulation loop (one step for now)
+        gameboy.step();
     }
 
 
 
-    println!("CPU State: A = {:#X}", cpu.a);
+    println!("fin");
 
 }
