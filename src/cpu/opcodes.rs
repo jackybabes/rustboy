@@ -78,7 +78,8 @@ impl CPU {
                 if byte != 0x00 {
                     panic!("STOP instruction expects null afterwards");
                 }
-                println!("STOP instruction");
+                // println!("STOP instruction");
+                self.stop();
                 self.cycles += 4;
             }, // STOP - 0x10
             0x11 => {
@@ -535,7 +536,9 @@ impl CPU {
                 self.cycles += 8;
             }, // LD (HL),L - 0x75
             0x76 => {
-                panic!("HALT - 0x76 not implemented");
+                // panic!("HALT - 0x76 not implemented");
+                self.halt();
+                self.cycles += 4;
             }, // HALT - 0x76
             0x77 => {
                 let address = self.read_register_pair(&REGISTER_HL);
@@ -1008,7 +1011,8 @@ impl CPU {
             }, // RET C - 0xD8
 
             0xD9 => {
-                panic!("0xD9 not implemented - RETI");
+                self.reti(memory);
+                self.cycles += 16;
             }, // RETI - 0xD9
 
             0xDA => {
@@ -1156,7 +1160,8 @@ impl CPU {
             }, // LD A,(FF00+C) - 0xF2
 
             0xF3 => {
-                panic!("0xF3 Not implmented - disbale interupts");
+                self.disable_interrupts();
+                self.cycles += 4;
             }, 
 
             0xF4 => {
@@ -1199,7 +1204,8 @@ impl CPU {
             }, // LD A,(nn) - 0xFA
 
             0xFB => {
-                panic!("0xFB Not implemented - enable interupts");
+                self.enable_interrupts();
+                self.cycles += 4;
             },
 
             0xFC => {

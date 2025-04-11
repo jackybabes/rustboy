@@ -72,4 +72,26 @@ impl CPU {
         self.set_flag(&Flag::H, false);
         self.set_flag(&Flag::N, false);
     }
+    
+    // Interupt ugly
+    pub fn enable_interrupts(&mut self) {
+        self.interrupts.ime = true;
+    }
+
+    pub fn disable_interrupts(&mut self) {
+        self.interrupts.ime = false;
+    }
+
+    pub fn reti(&mut self, memory: &mut Memory) {
+        self.enable_interrupts();
+        self.ret(memory);
+    }
+
+    pub fn halt(&mut self) {
+        self.is_halted = true;
+    }
+
+    pub fn stop(&mut self) {
+        self.is_stopped = true;
+    }
 }
