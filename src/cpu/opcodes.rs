@@ -1148,7 +1148,9 @@ impl CPU {
 
             0xF1 => {
                 let value = self.pop_u16(memory);
-                self.write_register_pair(&REGISTER_AF, value);
+                // bottom 4 bits of value are ignored
+                let masked_value = value & 0xFFF0;
+                self.write_register_pair(&REGISTER_AF, masked_value);
                 self.cycles += 12;
             }, // POP AF - 0xF1
 
