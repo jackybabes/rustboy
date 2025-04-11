@@ -21,6 +21,6 @@ target/
 /target
 
 .vscode/
-.log
+*.log
 
 roms/
