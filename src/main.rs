@@ -33,10 +33,32 @@ impl GameBoy {
         // Push current PC to stack
         self.cpu.push_u16(&mut self.memory, self.cpu.pc);
         self.cpu.pc = addr;
+
+        self.cpu.cycles += 20;
     }
 
     pub fn step(&mut self) {
+        // handle interupts
+        if self.cpu.interrupts.ime {
+            let ie = self.memory.read_hardware_register(HardwareRegister::IE);
+            let mut if_ = self.memory.read_hardware_register(HardwareRegister::IF);
+            let triggered = ie & if_;
+            
+            if triggered != 0 {
+                for i in 0..5 {
+                    if triggered & (1 << i) != 0 {
+                        if_ &= !(1 << i);
+                        self.memory.write_hardware_register(HardwareRegister::IF, if_);
 
+                        self.handle_interrupt(i);
+
+                        self.cpu.interrupts.ime = false;
+                        return;
+                    }
+                }
+            }
+        } 
+        // Deal with Halt
         if self.cpu.is_halted {
             // ⚠️ Special case: HALT bug
             let ie = self.memory.read_hardware_register(HardwareRegister::IE);
@@ -52,13 +74,12 @@ impl GameBoy {
             }
         }
 
-        // get next op code
+        // get next op code this increments the pc by 1
         let opcode = self.cpu.fetch_byte(&self.memory);
-        // println!("0x{:02X}", opcode);
-        
+
         // execute op code  
         self.cpu.execute(opcode, &mut self.memory);
-        // println!("{}", self.cpu);
+
 
         // delayed enable interuopt
         if self.cpu.interrupts.enable_ime_next {
@@ -66,25 +87,9 @@ impl GameBoy {
             self.cpu.interrupts.enable_ime_next = false;
         }
 
-        // print chars for blarg test roms
-        // self.cpu.handle_serial_for_test_rom(&mut self.memory);
-        if self.cpu.interrupts.ime {
-            let ie = self.memory.read_hardware_register(HardwareRegister::IE);
-            let mut if_ = self.memory.read_hardware_register(HardwareRegister::IF);
-            let triggered = ie & if_;
-            
-            if triggered != 0 {
-                for i in 0..5 {
-                    if triggered & (1 << i) != 0 {
-                        self.handle_interrupt(i);
-                        if_ &= !(1 << i);
-                        self.memory.write_hardware_register(HardwareRegister::IF, if_);
-                        self.cpu.interrupts.ime = false;
-                        return;
-                    }
-                }
-            }
-        } 
+        self.cpu.print_gameboy_doc_output(&mut self.memory);
+
+
     }
     
 }
@@ -95,10 +100,10 @@ fn main() {
     gameboy.memory.load_test_rom();
     gameboy.cpu.set_varibles_for_gb_doc();
 
-
+    gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
 
     for _ in 0..1000000 {
-        gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
+        // gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
         // Emulation loop (one step for now)
         gameboy.step();
         if gameboy.cpu.is_stopped {
