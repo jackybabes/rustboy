@@ -27,7 +27,6 @@ impl Memory {
         if address == HardwareRegister::LY as u16 {
             return 0x90;
         }
-        // testing above
         self.data[address as usize]
     }
 
@@ -49,7 +48,7 @@ impl Memory {
     }
 
     pub fn load_test_rom(&mut self) {
-        let rom = include_bytes!("../roms/individual/04-op r,imm.gb");
+        let rom = include_bytes!("../roms/individual/07-jr,jp,call,ret,rst.gb");
         for (i, byte) in rom.iter().enumerate() {
             self.data[i] = *byte;
         }

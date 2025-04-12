@@ -892,7 +892,7 @@ impl CPU {
             }, // ADD A,n - 0xC6
 
             0xC7 => {
-                self.pc = 0x00;
+                self.call(memory, 0x00);
                 self.cycles += 16;
             }, // RST 00H - 0xC7
 
