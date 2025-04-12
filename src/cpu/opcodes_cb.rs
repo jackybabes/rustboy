@@ -5,70 +5,47 @@ use super::core::{Register, REGISTER_HL, Flag};
 
 impl CPU {
     pub fn execute_cb_opcode(&mut self, opcode: u8, memory: &mut Memory) {
+        let index = opcode & 0x07;
+        let bit = (opcode & 0b111000) >> 3;
         match opcode {
             0x00..=0x07 => {
-                let index = opcode & 0x07;
-                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.rotate_left_circular_cb(value));
-                self.cycles += cycles
+                self.cycles += self.run_operation_on_index(memory, index, |cpu, value| cpu.rotate_left_circular_cb(value));
             }, // Rotate left circular
             0x08..=0x0F => {
-                let index = opcode & 0x07;
-                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.rotate_right_circular_cb(value));
-                self.cycles += cycles
+                self.cycles += self.run_operation_on_index(memory, index, |cpu, value| cpu.rotate_right_circular_cb(value));
             }, // Rotate right circular
             0x10..=0x17 => {
-                let index = opcode & 0x07;
-                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.rotate_left_carry_cb(value));
-                self.cycles += cycles
+                self.cycles += self.run_operation_on_index(memory, index, |cpu, value| cpu.rotate_left_carry_cb(value));
             }, // Rotate left carry
             0x18..=0x1F => {
-                let index = opcode & 0x07;
-                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.rotate_right_carry_cb(value));
-                self.cycles += cycles
+                self.cycles += self.run_operation_on_index(memory, index, |cpu, value| cpu.rotate_right_carry_cb(value));
             }, // Rotate right carry
             0x20..=0x27 => {
-                let index = opcode & 0x07;
-                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.shift_left_arithmetic_cb(value));
-                self.cycles += cycles
+                self.cycles += self.run_operation_on_index(memory, index, |cpu, value| cpu.shift_left_arithmetic_cb(value));
             }, // Shift left arithmetic
             0x28..=0x2F => {
-                let index = opcode & 0x07;
-                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.shift_right_arithmetic_cb(value));
-                self.cycles += cycles
+                self.cycles += self.run_operation_on_index(memory, index, |cpu, value| cpu.shift_right_arithmetic_cb(value));
             }, // Shift right arithmetic
             0x30..=0x37 => {
-                let index = opcode & 0x07;
-                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.swap_nibbles_cb(value));
-                self.cycles += cycles
+                self.cycles += self.run_operation_on_index(memory, index, |cpu, value| cpu.swap_nibbles_cb(value));
             }, // Swap nibbles
             0x38..=0x3F => {
-                let index = opcode & 0x07;
-                let cycles = self.run_operation_on_index(memory, index, |cpu, value| cpu.shift_right_logical_cb(value));
-                self.cycles += cycles
+                self.cycles += self.run_operation_on_index(memory, index, |cpu, value| cpu.shift_right_logical_cb(value));
             }, // Shift right logical
             0x40..=0x7F => {
-                let index = opcode & 0x07;
-                let bit = (opcode & 0b111000) >> 3;
-                let cycles = self.run_bit_res_set_operation_on_index(
+                self.cycles += self.run_bit_operation_on_index(
                     memory, index, bit, |cpu, bit, value| cpu.test_bit_cb(bit, value), 12
                 );
-                self.cycles += cycles
             }, // Check Bit
             0x80..=0xBF => {
-                let index = opcode & 0x07;
-                let bit = (opcode & 0b111000) >> 3;
-                let cycles = self.run_bit_res_set_operation_on_index(
+                self.cycles += self.run_res_set_operation_on_index(
                     memory, index, bit, |cpu, bit, value| cpu.reset_bit_cb(bit, value), 16
                 );
-                self.cycles += cycles
             }, // Reset Bit
             0xC0..=0xFF => {
-                let index = opcode & 0x07;
-                let bit = (opcode & 0b111000) >> 3;
-                let cycles = self.run_bit_res_set_operation_on_index(
+                self.cycles += self.run_res_set_operation_on_index(
                     memory, index, bit, |cpu, bit, value| cpu.set_bit_cb(bit, value), 16
                 );
-                self.cycles += cycles
             }, // Set Bit
         }
     }
@@ -106,7 +83,7 @@ impl CPU {
         }
     }
 
-    fn run_bit_res_set_operation_on_index<F>(&mut self, memory: &mut Memory, index: u8, bit: u8, mut operation: F, hl_cycles: u64) -> u64
+    fn run_res_set_operation_on_index<F>(&mut self, memory: &mut Memory, index: u8, bit: u8, mut operation: F, hl_cycles: u64) -> u64
     where
         F: FnMut(&mut Self, u8, u8) -> u8,
     {
@@ -120,6 +97,22 @@ impl CPU {
             let value = memory.read_byte(address);
             let result = operation(self, bit, value);
             memory.write_byte(address, result);
+            return hl_cycles
+        }
+    }
+
+    fn run_bit_operation_on_index<F>(&mut self, memory: &mut Memory, index: u8, bit: u8, mut operation: F, hl_cycles: u64) -> u64
+    where
+        F: FnMut(&mut Self, u8, u8),
+    {
+        if let Some(register) = self.get_register(index) {
+            let value = self.read_register(&register);
+            operation(self, bit, value);
+            return 8;
+        } else {
+            let address = self.read_register_pair(&REGISTER_HL);
+            let value = memory.read_byte(address);
+            operation(self, bit, value);
             return hl_cycles
         }
     }
@@ -220,14 +213,12 @@ impl CPU {
         result
     }
 
-    fn test_bit_cb(&mut self, bit: u8, value: u8) -> u8{
+    fn test_bit_cb(&mut self, bit: u8, value: u8){
         let result = value & (1 << bit);
 
         self.set_flag(&Flag::Z, result == 0);
         self.set_flag(&Flag::N, false);
         self.set_flag(&Flag::H, true);
-
-        result
     }
 
     fn reset_bit_cb(&mut self, bit: u8, value: u8) -> u8{
