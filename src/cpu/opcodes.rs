@@ -1156,8 +1156,8 @@ impl CPU {
 
             0xF2 => {
                 let address = 0xFF00 as u16 + self.read_register(&Register::C) as u16;
-                let value = self.read_register(&Register::A);
-                memory.write_byte(address, value);
+                let value = memory.read_byte(address);
+                self.write_register(&Register::A, value);
                 self.cycles += 8;
             }, // LD A,(FF00+C) - 0xF2
 
