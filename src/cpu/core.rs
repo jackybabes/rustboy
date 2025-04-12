@@ -208,5 +208,5 @@ impl CPU {
         self.sp = 0xFFFE;
         self.pc = 0x0100;
     }
-    
+
 }

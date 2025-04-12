@@ -1,6 +1,6 @@
 use crate::data::HardwareRegister;
 
-// Start	End	Description	Notes
+// Start	    End	Description	Notes
 // 0000	3FFF	16 KiB ROM bank 00	From cartridge, usually a fixed bank
 // 4000	7FFF	16 KiB ROM Bank 01–NN	From cartridge, switchable bank via mapper (if any)
 // 8000	9FFF	8 KiB Video RAM (VRAM)	In CGB mode, switchable bank 0/1
@@ -13,6 +13,7 @@ use crate::data::HardwareRegister;
 // FF00	FF7F	I/O Registers	
 // FF80	FFFE	High RAM (HRAM)	
 // FFFF	FFFF	Interrupt Enable register (IE)	
+
 pub struct Memory {
     data: [u8; 0x10000],
 }
@@ -48,7 +49,7 @@ impl Memory {
     }
 
     pub fn load_test_rom(&mut self) {
-        let rom = include_bytes!("../roms/individual/10-bit ops.gb");
+        let rom = include_bytes!("../roms/individual/02-interrupts.gb");
         for (i, byte) in rom.iter().enumerate() {
             self.data[i] = *byte;
         }
