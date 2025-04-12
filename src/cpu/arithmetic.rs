@@ -142,9 +142,21 @@ impl CPU {
     }
 
     pub fn sub_u8_from_register_with_carry(&mut self, register: &Register, value_to_sub: u8) {
-        let carry = self.get_flag(&Flag::C);
-        let value = value_to_sub.wrapping_add(carry as u8);
-        self.sub_u8_from_register(register, value);
+        let value = self.read_register(register);
+        let carry = self.get_flag(&Flag::C) as u8;
+    
+        let intermediate = (value as i16) - (value_to_sub as i16) - (carry as i16);
+        let result = intermediate as u8;
+    
+        let half_borrow = ((value & 0xF).wrapping_sub(value_to_sub & 0xF).wrapping_sub(carry)) & 0x10 != 0;
+        let full_borrow = intermediate < 0;
+    
+        self.set_flag(&Flag::Z, result == 0);
+        self.set_flag(&Flag::N, true);
+        self.set_flag(&Flag::H, half_borrow);
+        self.set_flag(&Flag::C, full_borrow);
+    
+        self.write_register(register, result);
     }
 
     pub fn sub_register_from_register_with_carry(&mut self, lhs: &Register, rhs: &Register) {
