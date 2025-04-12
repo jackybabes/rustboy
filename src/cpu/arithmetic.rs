@@ -96,9 +96,22 @@ impl CPU {
     }
 
     pub fn add_u8_to_register_with_carry(&mut self, register: &Register, value_to_add: u8) {
-        let carry = self.get_flag(&Flag::C);
-        let value = value_to_add.wrapping_add(carry as u8);
-        self.add_u8_to_register(register, value);
+        let value = self.read_register(register);
+        let carry = self.get_flag(&Flag::C) as u8;
+    
+        let intermediate = (value as u16) + (value_to_add as u16) + (carry as u16);
+        let result = intermediate as u8;
+    
+        // Flags
+        let half_carry = ((value & 0xF) + (value_to_add & 0xF) + carry) > 0xF;
+        let full_carry = intermediate > 0xFF;
+    
+        self.set_flag(&Flag::Z, result == 0);
+        self.set_flag(&Flag::N, false);
+        self.set_flag(&Flag::H, half_carry);
+        self.set_flag(&Flag::C, full_carry);
+    
+        self.write_register(register, result);
     }
 
 
