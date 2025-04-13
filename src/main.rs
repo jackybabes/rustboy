@@ -7,6 +7,9 @@ use memory::Memory;
 mod data;
 use data::HardwareRegister;
 
+mod interrupts;
+use interrupts::handle_interrupt;
+
 pub struct GameBoy {
     pub cpu: CPU,
     pub memory: Memory,
@@ -18,23 +21,6 @@ impl GameBoy {
             cpu: CPU::new(),
             memory: Memory::new(),
         }
-    }
-
-    fn handle_interrupt(&mut self, interrupt: u8) {
-        let addr = match interrupt {
-            0 => 0x40, // V-Blank
-            1 => 0x48, // LCD STAT
-            2 => 0x50, // Timer
-            3 => 0x58, // Serial
-            4 => 0x60, // Joypad
-            _ => return,
-        };
-
-        // Push current PC to stack
-        self.cpu.push_u16(&mut self.memory, self.cpu.pc);
-        self.cpu.pc = addr;
-
-        self.cpu.cycles += 20;
     }
 
     pub fn step(&mut self) {
@@ -50,7 +36,7 @@ impl GameBoy {
                         if_ &= !(1 << i);
                         self.memory.write_hardware_register(HardwareRegister::IF, if_);
 
-                        self.handle_interrupt(i);
+                        handle_interrupt(&mut self.cpu, &mut self.memory, i);
 
                         self.cpu.interrupts.ime = false;
                         return;
@@ -76,7 +62,6 @@ impl GameBoy {
 
         // get next op code this increments the pc by 1
         let opcode = self.cpu.fetch_byte(&self.memory);
-
         // execute op code  
         self.cpu.execute(opcode, &mut self.memory);
 
@@ -89,8 +74,6 @@ impl GameBoy {
 
         self.cpu.print_gameboy_doc_output(&mut self.memory);
         // self.cpu.handle_serial_for_test_rom(&mut self.memory);
-
-
     }
     
 }
@@ -108,7 +91,6 @@ fn main() {
         // Emulation loop (one step for now)
         gameboy.step();
         if gameboy.cpu.is_stopped {
-
             println!("Stopped on {}", gameboy.cpu.pc);
             break;
         }
