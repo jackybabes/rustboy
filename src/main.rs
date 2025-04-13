@@ -10,6 +10,9 @@ use data::HardwareRegister;
 mod interrupts;
 use interrupts::handle_interrupt;
 
+mod timer;
+use timer::Timer;
+
 pub struct GameBoy {
     pub cpu: CPU,
     pub memory: Memory,
@@ -56,6 +59,9 @@ impl GameBoy {
                 self.cpu.is_halted = false;
             } else {
                 // stay halted
+                // self.cpu.print_gameboy_doc_output(&mut self.memory);
+
+                self.cpu.cycles = 4;
                 return;
             }
         }
@@ -86,15 +92,21 @@ fn main() {
 
     gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
 
-    for _ in 0..10000000 {
-        // gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
-        // Emulation loop (one step for now)
-        gameboy.step();
-        if gameboy.cpu.is_stopped {
-            println!("Stopped on {}", gameboy.cpu.pc);
-            break;
+    let mut timer = Timer::new(&mut gameboy.memory);
+
+        for _ in 0..10000000 {
+            // gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
+            // Emulation loop (one step for now)
+            
+            gameboy.step();
+            timer.step(gameboy.cpu.cycles as u16, &mut gameboy.memory);
+            gameboy.cpu.cycles = 0;
+
+            if gameboy.cpu.is_stopped {
+                println!("Stopped on {}", gameboy.cpu.pc);
+                break;
+            }
         }
-    }
 
 
 
