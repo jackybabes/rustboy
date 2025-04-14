@@ -1,16 +1,13 @@
 mod cpu;
-use cpu::CPU;
-
 mod memory;
-use memory::Memory;
-
 mod data;
-use data::HardwareRegister;
-
 mod interrupts;
-use interrupts::handle_interrupt;
-
 mod timer;
+
+use cpu::CPU;
+use memory::Memory;
+use data::HardwareRegister;
+use interrupts::handle_interrupt;
 use timer::Timer;
 
 pub struct GameBoy {
@@ -102,10 +99,10 @@ fn main() {
             timer.step(gameboy.cpu.cycles as u16, &mut gameboy.memory);
             gameboy.cpu.cycles = 0;
 
-            // if gameboy.cpu.is_stopped {
-            //     println!("Stopped on {}", gameboy.cpu.pc);
+            if gameboy.cpu.is_stopped {
+                println!("Stopped on {}", gameboy.cpu.pc);
             //     break;
-            // }
+            }
         }
 
 
