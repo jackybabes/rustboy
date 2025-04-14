@@ -96,7 +96,7 @@ fn main() {
             // Emulation loop (one step for now)
             
             gameboy.step();
-            timer.step(gameboy.cpu.cycles as u16, &mut gameboy.memory);
+            timer.step(gameboy.cpu.cycles, &mut gameboy.memory);
             gameboy.cpu.cycles = 0;
 
             if gameboy.cpu.is_stopped {
