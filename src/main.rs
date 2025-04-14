@@ -24,6 +24,16 @@ impl GameBoy {
     }
 
     pub fn step(&mut self) -> u16 {
+        // handle stop
+        if self.cpu.is_stopped {
+            let joypad = self.memory.read_hardware_register(HardwareRegister::P1);
+            if joypad & 0x0F != 0x0F {
+                self.cpu.is_stopped = false;
+            } else {
+                return 0;
+            }
+        }
+
         // handle interupts
         if self.cpu.interrupts.ime {
             let ie = self.memory.read_hardware_register(HardwareRegister::IE);
@@ -64,7 +74,7 @@ impl GameBoy {
         // get next op code this increments the pc by 1
         let opcode = self.cpu.fetch_byte(&self.memory);
         // execute op code  
-        self.cpu.execute(opcode, &mut self.memory);
+        let cycles = self.cpu.execute(opcode, &mut self.memory);
 
 
         // delayed enable interuopt
@@ -72,10 +82,11 @@ impl GameBoy {
             self.cpu.interrupts.ime = true;
             self.cpu.interrupts.enable_ime_next = false;
         }
-
-        return self.cpu.cycles;
-
+        
         // self.cpu.print_gameboy_doc_output(&mut self.memory);
+        return cycles;
+
+
     }
     
 }
@@ -92,18 +103,17 @@ fn main() {
 
     const CYCLES_PER_FRAME: u32 = 70224;
 
-    for _frame in 0..1000 {
+    for _frame in 0..10000 {
         let mut cycles_this_frame = 0;
 
         while cycles_this_frame < CYCLES_PER_FRAME {
             let used_cycles = gameboy.step();
+            if gameboy.cpu.is_stopped {
+                continue;
+            }
+
             timer.step(used_cycles, &mut gameboy.memory);
             cycles_this_frame += used_cycles as u32;
-
-            // if gameboy.cpu.is_stopped {
-            //     println!("Stopped on PC={:04X}", gameboy.cpu.pc);
-            //     return;
-            // }
 
             gameboy.cpu.handle_serial_for_test_rom(&mut gameboy.memory);
         }
