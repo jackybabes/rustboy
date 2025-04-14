@@ -90,20 +90,26 @@ fn main() {
 
     let mut timer = Timer::new(&mut gameboy.memory);
 
-        for _ in 0..10000000 {
-            // gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
-            // Emulation loop (one step for now)
-            
+    const CYCLES_PER_FRAME: u32 = 70224;
+
+    for _frame in 0..1000 {
+        let mut cycles_this_frame = 0;
+
+        while cycles_this_frame < CYCLES_PER_FRAME {
             let used_cycles = gameboy.step();
             timer.step(used_cycles, &mut gameboy.memory);
+            cycles_this_frame += used_cycles as u32;
 
             // if gameboy.cpu.is_stopped {
-            //     // println!("Stopped on {}", gameboy.cpu.pc);
-            // //     break;
+            //     println!("Stopped on PC={:04X}", gameboy.cpu.pc);
+            //     return;
             // }
 
             gameboy.cpu.handle_serial_for_test_rom(&mut gameboy.memory);
         }
+
+        // Optionally: render frame, wait, print debug info, etc.
+    }
 
 
 
