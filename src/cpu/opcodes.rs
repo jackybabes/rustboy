@@ -4,7 +4,8 @@ use crate::memory::Memory;
 use super::core::{Register, REGISTER_BC, REGISTER_DE, REGISTER_HL, Flag, REGISTER_AF};
 
 impl CPU {
-    pub fn execute(&mut self, opcode: u8, memory: &mut Memory) {
+    pub fn execute(&mut self, opcode: u8, memory: &mut Memory) -> u16 {
+        self.cycles = 0;
         match opcode {
             0x00 => {
                 self.cycles += 4;
@@ -1231,5 +1232,6 @@ impl CPU {
                 self.cycles += 16;
             }, // RST 38H - 0xFF
         }
+        return self.cycles;
     }
 }

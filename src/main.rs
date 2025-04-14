@@ -23,7 +23,7 @@ impl GameBoy {
         }
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self) -> u16 {
         // handle interupts
         if self.cpu.interrupts.ime {
             let ie = self.memory.read_hardware_register(HardwareRegister::IE);
@@ -39,7 +39,7 @@ impl GameBoy {
                         handle_interrupt(&mut self.cpu, &mut self.memory, i);
 
                         self.cpu.interrupts.ime = false;
-                        return;
+                        return 20;
                     }
                 }
             }
@@ -57,9 +57,7 @@ impl GameBoy {
             } else {
                 // stay halted
                 // self.cpu.print_gameboy_doc_output(&mut self.memory);
-
-                self.cpu.cycles = 4;
-                return;
+                return 4;
             }
         }
 
@@ -74,6 +72,8 @@ impl GameBoy {
             self.cpu.interrupts.ime = true;
             self.cpu.interrupts.enable_ime_next = false;
         }
+
+        return self.cpu.cycles;
 
         // self.cpu.print_gameboy_doc_output(&mut self.memory);
     }
@@ -94,14 +94,13 @@ fn main() {
             // gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
             // Emulation loop (one step for now)
             
-            gameboy.step();
-            timer.step(gameboy.cpu.cycles, &mut gameboy.memory);
-            gameboy.cpu.cycles = 0;
+            let used_cycles = gameboy.step();
+            timer.step(used_cycles, &mut gameboy.memory);
 
-            if gameboy.cpu.is_stopped {
-                println!("Stopped on {}", gameboy.cpu.pc);
-            //     break;
-            }
+            // if gameboy.cpu.is_stopped {
+            //     // println!("Stopped on {}", gameboy.cpu.pc);
+            // //     break;
+            // }
 
             gameboy.cpu.handle_serial_for_test_rom(&mut gameboy.memory);
         }
