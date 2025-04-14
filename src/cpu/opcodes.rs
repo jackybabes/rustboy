@@ -6,7 +6,9 @@ use super::core::{Register, REGISTER_BC, REGISTER_DE, REGISTER_HL, Flag, REGISTE
 impl CPU {
     pub fn execute(&mut self, opcode: u8, memory: &mut Memory) {
         match opcode {
-            0x00 => {}, // NOP - Do nothing
+            0x00 => {
+                self.cycles += 4;
+            }, // NOP - Do nothing
             0x01 => {
                 let word = self.fetch_word(memory);
                 self.write_register_pair(&REGISTER_BC, word);
@@ -1100,7 +1102,7 @@ impl CPU {
             0xE8 => {
                 let offset = self.fetch_byte(&memory);
                 self.sp = self.add_i8_to_sp(offset, self.sp);
-                self.cycles += 12;
+                self.cycles += 16;
             }, // ADD SP,i8 - 0xE8
 
             0xE9 => {

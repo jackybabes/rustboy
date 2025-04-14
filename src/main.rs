@@ -78,8 +78,8 @@ impl GameBoy {
             self.cpu.interrupts.enable_ime_next = false;
         }
 
-        self.cpu.print_gameboy_doc_output(&mut self.memory);
-        // self.cpu.handle_serial_for_test_rom(&mut self.memory);
+        // self.cpu.print_gameboy_doc_output(&mut self.memory);
+        self.cpu.handle_serial_for_test_rom(&mut self.memory);
     }
     
 }
@@ -102,10 +102,10 @@ fn main() {
             timer.step(gameboy.cpu.cycles as u16, &mut gameboy.memory);
             gameboy.cpu.cycles = 0;
 
-            if gameboy.cpu.is_stopped {
-                println!("Stopped on {}", gameboy.cpu.pc);
-                break;
-            }
+            // if gameboy.cpu.is_stopped {
+            //     println!("Stopped on {}", gameboy.cpu.pc);
+            //     break;
+            // }
         }
 
 
