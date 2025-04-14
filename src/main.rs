@@ -76,7 +76,6 @@ impl GameBoy {
         }
 
         // self.cpu.print_gameboy_doc_output(&mut self.memory);
-        self.cpu.handle_serial_for_test_rom(&mut self.memory);
     }
     
 }
@@ -103,6 +102,8 @@ fn main() {
                 println!("Stopped on {}", gameboy.cpu.pc);
             //     break;
             }
+
+            gameboy.cpu.handle_serial_for_test_rom(&mut gameboy.memory);
         }
 
 
