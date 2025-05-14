@@ -3,6 +3,7 @@ mod memory;
 mod data;
 mod interrupts;
 mod timer;
+mod gameboy_doctor;
 
 use cpu::CPU;
 use memory::Memory;
@@ -94,10 +95,9 @@ impl GameBoy {
 fn main() {
     let mut gameboy = GameBoy::new();
 
-    gameboy.memory.load_test_rom();
-    gameboy.cpu.set_varibles_for_gb_doc();
-
-    gameboy.cpu.print_gameboy_doc_output(&mut gameboy.memory);
+    gameboy_doctor::gb_doc_load_test_rom(&mut gameboy.memory);
+    gameboy_doctor::gb_doc_set_varibles(&mut gameboy.cpu);
+    gameboy_doctor::gb_doc_print(&mut gameboy.cpu, &mut gameboy.memory);
 
     let mut timer = Timer::new(&mut gameboy.memory);
 
@@ -115,7 +115,7 @@ fn main() {
             timer.step(used_cycles, &mut gameboy.memory);
             cycles_this_frame += used_cycles as u32;
 
-            gameboy.cpu.handle_serial_for_test_rom(&mut gameboy.memory);
+            gameboy_doctor::gb_doc_handle_serial(&mut gameboy.memory);
         }
 
         // Optionally: render frame, wait, print debug info, etc.

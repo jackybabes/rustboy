@@ -175,38 +175,4 @@ impl CPU {
         memory.write_byte(self.sp, low_byte);  // Then low byte
     }
 
-    // Serial I/O emulation
-// Called when memory[0xFF02] == 0x81
-    pub fn handle_serial_for_test_rom(&mut self, memory: &mut Memory) {
-        let control = memory.read_byte(0xFF02);
-        if control == 0x81 {
-            let byte = memory.read_byte(0xFF01);
-            print!("{}", byte as char); // Output to console
-            memory.write_byte(0xFF02, 0x00); // Reset
-        }
-    }
-
-    pub fn print_gameboy_doc_output(&mut self, memory: &mut Memory) {
-        println!("A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X}", 
-            self.a, self.f, self.b, self.c, self.d, self.e, self.h, self.l, 
-            self.sp, self.pc, 
-            memory.read_byte(self.pc),
-            memory.read_byte(self.pc + 1),
-            memory.read_byte(self.pc + 2),
-            memory.read_byte(self.pc + 3));
-    }
-
-    pub fn set_varibles_for_gb_doc(&mut self) {
-        self.a = 0x01;
-        self.f = 0xB0;
-        self.b = 0x00;
-        self.c = 0x13;
-        self.d = 0x00;
-        self.e = 0xD8;
-        self.h = 0x01;
-        self.l = 0x4D;
-        self.sp = 0xFFFE;
-        self.pc = 0x0100;
-    }
-
 }

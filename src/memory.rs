@@ -47,11 +47,4 @@ impl Memory {
     pub fn write_hardware_register(&mut self, register: HardwareRegister, value: u8) {
         self.data[register as usize] = value;
     }
-
-    pub fn load_test_rom(&mut self) {
-        let rom = include_bytes!("/Users/jack/Code/rustboy/roms/gb-test-roms/mem_timing/mem_timing.gb");
-        for (i, byte) in rom.iter().enumerate() {
-            self.data[i] = *byte;
-        }
-    }
 }

@@ -230,7 +230,4 @@ impl CPU {
         let result = value | (1 << bit);
         result
     }
-    
-    
-
 }
