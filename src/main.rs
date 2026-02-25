@@ -95,7 +95,7 @@ impl GameBoy {
 fn main() {
     let mut gameboy = GameBoy::new();
 
-    gameboy_doctor::gb_doc_load_test_rom(&mut gameboy.memory);
+    gameboy_doctor::gb_doc_load_test_rom(&mut gameboy.memory, "/Users/jack/Code/rustboy/roms/gb-test-roms/cpu_instrs/cpu_instrs.gb");
     gameboy_doctor::gb_doc_set_varibles(&mut gameboy.cpu);
     gameboy_doctor::gb_doc_print(&mut gameboy.cpu, &mut gameboy.memory);
 
