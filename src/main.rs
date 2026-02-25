@@ -87,7 +87,7 @@ impl GameBoy {
 fn main() {
     let mut gameboy = GameBoy::new();
 
-    let rom_path = "/Users/jack/Code/rustboy/roms/gb-test-roms/cpu_instrs/individual/01-special.gb";
+    let rom_path = "/Users/jack/Code/rustboy/roms/gb-test-roms/cpu_instrs/cpu_instrs.gb";
 
     gameboy_doctor::gb_doc_load_test_rom(&mut gameboy.memory, rom_path);
     gameboy_doctor::gb_doc_set_inital_registers(&mut gameboy.cpu);
@@ -106,7 +106,7 @@ fn main() {
         // Test for infinite loop
         if last_pc == gameboy.cpu.pc {
             stable_count += 1;
-            if stable_count > 10000 {
+            if stable_count > 100 {
                 println!("Stable count: {}", stable_count);
                 break;
             }
