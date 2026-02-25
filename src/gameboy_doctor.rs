@@ -12,7 +12,7 @@ pub fn gb_doc_print(cpu: &CPU, memory: &Memory) {
         memory.read_byte(cpu.pc + 3));
 }
 
-pub fn gb_doc_set_varibles(cpu: &mut CPU) {
+pub fn gb_doc_set_inital_registers(cpu: &mut CPU) {
     cpu.a = 0x01;
     cpu.f = 0xB0;
     cpu.b = 0x00;

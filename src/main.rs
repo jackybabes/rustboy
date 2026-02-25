@@ -14,80 +14,72 @@ use timer::Timer;
 pub struct GameBoy {
     pub cpu: CPU,
     pub memory: Memory,
+    pub timer: Timer,
 }
 
 impl GameBoy {
     pub fn new() -> Self {
+        let mut memory = Memory::new();
+        let timer = Timer::new(&mut memory);
+
         GameBoy {
             cpu: CPU::new(),
-            memory: Memory::new(),
+            memory: memory,
+            timer: timer,
         }
     }
 
-    pub fn step(&mut self) -> u16 {
-        // handle stop
-        if self.cpu.is_stopped {
-            let joypad = self.memory.read_hardware_register(HardwareRegister::P1);
-            if joypad & 0x0F != 0x0F {
-                self.cpu.is_stopped = false;
-            } else {
-                return 0;
-            }
-        }
+    fn tick(&mut self, cycles: u16) {
+        self.timer.step(cycles, &mut self.memory);
+        // ppu etc
+    }
 
-        // handle interupts
+    fn step(&mut self) -> u16 {
+        // 1. Interrupts: if IME set and any enabled interrupt pending, take one
         if self.cpu.interrupts.ime {
             let ie = self.memory.read_hardware_register(HardwareRegister::IE);
             let mut if_ = self.memory.read_hardware_register(HardwareRegister::IF);
-            let triggered = ie & if_;
-            
-            if triggered != 0 {
-                for i in 0..5 {
-                    if triggered & (1 << i) != 0 {
-                        if_ &= !(1 << i);
-                        self.memory.write_hardware_register(HardwareRegister::IF, if_);
+            let pending = ie & if_;
 
-                        handle_interrupt(&mut self.cpu, &mut self.memory, i);
-
-                        self.cpu.interrupts.ime = false;
-                        return 20;
-                    }
-                }
-            }
-        } 
-        // Deal with Halt
-        if self.cpu.is_halted {
-            // ⚠️ Special case: HALT bug
-            let ie = self.memory.read_hardware_register(HardwareRegister::IE);
-            let iflag = self.memory.read_hardware_register(HardwareRegister::IF);
-            let pending = ie & iflag;
-    
             if pending != 0 {
-                // HALT bug: IME is off, but an interrupt is pending
-                self.cpu.is_halted = false;
+                let i = (0..5).find(|&i| (pending & (1 << i)) != 0).unwrap();
+                if_ &= !(1 << i);
+                self.memory.write_hardware_register(HardwareRegister::IF, if_);
+
+                handle_interrupt(&mut self.cpu, &mut self.memory, i);
+                self.cpu.interrupts.ime = false;
+                return 20;
+            }
+        }
+
+        // 2. HALT: if halted, either wake on interrupt (HALT bug) or burn cycles
+        if self.cpu.is_halted {
+            print!("Halted");
+            let ie = self.memory.read_hardware_register(HardwareRegister::IE);
+            let if_ = self.memory.read_hardware_register(HardwareRegister::IF);
+            let pending = ie & if_;
+
+            if !self.cpu.interrupts.ime && pending != 0 {
+                self.cpu.is_halted = false; // HALT bug: wake but don't jump yet
+            } else if self.cpu.interrupts.ime && pending != 0 {
+                self.cpu.is_halted = false; // normal: next step will take interrupt
             } else {
-                // stay halted
-                // self.cpu.print_gameboy_doc_output(&mut self.memory);
                 return 4;
             }
         }
 
-        // get next op code this increments the pc by 1
+        // 3. Execute one instruction
         let opcode = self.cpu.fetch_byte(&self.memory);
-        // execute op code  
         let cycles = self.cpu.execute(opcode, &mut self.memory);
 
-
-        // delayed enable interuopt
+        // Delayed IME (EI takes effect after next instruction)
         if self.cpu.interrupts.enable_ime_next {
             self.cpu.interrupts.ime = true;
             self.cpu.interrupts.enable_ime_next = false;
         }
-        
-        // self.cpu.print_gameboy_doc_output(&mut self.memory);
-        return cycles;
 
-
+        self.tick(cycles);
+        cycles
     }
     
 }
@@ -95,34 +87,33 @@ impl GameBoy {
 fn main() {
     let mut gameboy = GameBoy::new();
 
-    gameboy_doctor::gb_doc_load_test_rom(&mut gameboy.memory, "/Users/jack/Code/rustboy/roms/gb-test-roms/cpu_instrs/cpu_instrs.gb");
-    gameboy_doctor::gb_doc_set_varibles(&mut gameboy.cpu);
+    let rom_path = "/Users/jack/Code/rustboy/roms/gb-test-roms/cpu_instrs/individual/01-special.gb";
+
+    gameboy_doctor::gb_doc_load_test_rom(&mut gameboy.memory, rom_path);
+    gameboy_doctor::gb_doc_set_inital_registers(&mut gameboy.cpu);
+    println!("Initial Registers");
     gameboy_doctor::gb_doc_print(&mut gameboy.cpu, &mut gameboy.memory);
 
-    let mut timer = Timer::new(&mut gameboy.memory);
+    let mut last_pc = 0;
+    let mut stable_count = 0; 
 
-    const CYCLES_PER_FRAME: u32 = 70224;
 
-    for _frame in 0..10000 {
-        let mut cycles_this_frame = 0;
+    loop {
+        gameboy.step();
+        // You can add any logging/printing here if desired, e.g. println!("Cycles: {}", cycles);
+        gameboy_doctor::gb_doc_handle_serial(&mut gameboy.memory);
 
-        while cycles_this_frame < CYCLES_PER_FRAME {
-            let used_cycles = gameboy.step();
-            if gameboy.cpu.is_stopped {
-                continue;
+        // Test for infinite loop
+        if last_pc == gameboy.cpu.pc {
+            stable_count += 1;
+            if stable_count > 10000 {
+                println!("Stable count: {}", stable_count);
+                break;
             }
-
-            timer.step(used_cycles, &mut gameboy.memory);
-            cycles_this_frame += used_cycles as u32;
-
-            gameboy_doctor::gb_doc_handle_serial(&mut gameboy.memory);
+        } else {
+            stable_count = 0;
         }
 
-        // Optionally: render frame, wait, print debug info, etc.
+        last_pc = gameboy.cpu.pc;
     }
-
-
-
-    println!("fin");
-
 }
