@@ -54,7 +54,7 @@ impl GameBoy {
 
         // 2. HALT: if halted, either wake on interrupt (HALT bug) or burn cycles
         if self.cpu.is_halted {
-            print!("Halted");
+            // print!("Halted");
             let ie = self.memory.read_hardware_register(HardwareRegister::IE);
             let if_ = self.memory.read_hardware_register(HardwareRegister::IF);
             let pending = ie & if_;
@@ -64,6 +64,7 @@ impl GameBoy {
             } else if self.cpu.interrupts.ime && pending != 0 {
                 self.cpu.is_halted = false; // normal: next step will take interrupt
             } else {
+                self.tick(4);
                 return 4;
             }
         }
@@ -87,7 +88,7 @@ impl GameBoy {
 fn main() {
     let mut gameboy = GameBoy::new();
 
-    let rom_path = "/Users/jack/Code/rustboy/roms/gb-test-roms/cpu_instrs/cpu_instrs.gb";
+    let rom_path = "/Users/jack/Code/rustboy/roms/gb-test-roms/cpu_instrs/individual/02-interrupts.gb";
 
     gameboy_doctor::gb_doc_load_test_rom(&mut gameboy.memory, rom_path);
     gameboy_doctor::gb_doc_set_inital_registers(&mut gameboy.cpu);
@@ -106,7 +107,7 @@ fn main() {
         // Test for infinite loop
         if last_pc == gameboy.cpu.pc {
             stable_count += 1;
-            if stable_count > 100 {
+            if stable_count > 10000  {
                 println!("Stable count: {}", stable_count);
                 break;
             }
