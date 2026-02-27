@@ -25,3 +25,4 @@ target/
 
 roms/
 log.txt
+.DS_Store
