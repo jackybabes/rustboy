@@ -35,23 +35,6 @@ impl GameBoy {
     }
 
     fn step(&mut self) -> u16 {
-        // 1. Interrupts: if IME set and any enabled interrupt pending, take one
-        if self.cpu.interrupts.ime {
-            let ie = self.memory.read_hardware_register(HardwareRegister::IE);
-            let mut if_ = self.memory.read_hardware_register(HardwareRegister::IF);
-            let pending = ie & if_;
-
-            if pending != 0 {
-                let i = (0..5).find(|&i| (pending & (1 << i)) != 0).unwrap();
-                if_ &= !(1 << i);
-                self.memory.write_hardware_register(HardwareRegister::IF, if_);
-
-                handle_interrupt(&mut self.cpu, &mut self.memory, i);
-                self.cpu.interrupts.ime = false;
-                return 20;
-            }
-        }
-
         // 2. HALT: if halted, either wake on interrupt (HALT bug) or burn cycles
         if self.cpu.is_halted {
             // print!("Halted");
@@ -69,15 +52,34 @@ impl GameBoy {
             }
         }
 
-        // 3. Execute one instruction
-        let opcode = self.cpu.fetch_byte(&self.memory);
-        let cycles = self.cpu.execute(opcode, &mut self.memory);
+        // 1. Interrupts: if IME set and any enabled interrupt pending, take one
+        if self.cpu.interrupts.ime {
+            let ie = self.memory.read_hardware_register(HardwareRegister::IE);
+            let mut if_ = self.memory.read_hardware_register(HardwareRegister::IF);
+            let pending = ie & if_;
+
+            if pending != 0 {
+                let i = (0..5).find(|&i| (pending & (1 << i)) != 0).unwrap();
+                if_ &= !(1 << i);
+                self.memory.write_hardware_register(HardwareRegister::IF, if_);
+
+                handle_interrupt(&mut self.cpu, &mut self.memory, i);
+                self.cpu.interrupts.ime = false;
+                self.tick(20);
+                return 20;
+            }
+        }
+
 
         // Delayed IME (EI takes effect after next instruction)
         if self.cpu.interrupts.enable_ime_next {
             self.cpu.interrupts.ime = true;
             self.cpu.interrupts.enable_ime_next = false;
         }
+
+        // 3. Execute one instruction
+        let opcode = self.cpu.fetch_byte(&self.memory);
+        let cycles = self.cpu.execute(opcode, &mut self.memory);
 
         self.tick(cycles);
         cycles
@@ -103,6 +105,7 @@ fn main() {
         gameboy.step();
         // You can add any logging/printing here if desired, e.g. println!("Cycles: {}", cycles);
         gameboy_doctor::gb_doc_handle_serial(&mut gameboy.memory);
+        // println!("{}", gameboy.cpu);
 
         // Test for infinite loop
         if last_pc == gameboy.cpu.pc {
