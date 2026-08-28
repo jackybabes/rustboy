@@ -4,3 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+
+# The test ROMs execute tens of millions of instructions; optimize test builds
+# so `cargo test` finishes in seconds rather than minutes. Debug builds
+# (`cargo build`, the debugger) are left unoptimized.
+[profile.test]
+opt-level = 3
