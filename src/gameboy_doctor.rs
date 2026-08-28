@@ -25,13 +25,14 @@ pub fn gb_doc_set_inital_registers(cpu: &mut CPU) {
     cpu.pc = 0x0100;
 }
 
-pub fn gb_doc_handle_serial(memory: &mut Memory) {
+pub fn gb_doc_handle_serial(memory: &mut Memory) -> Option<u8> {
     let control = memory.read_byte(0xFF02);
     if control == 0x81 {
         let byte = memory.read_byte(0xFF01);
-        print!("{}", byte as char); // Output to console
-        memory.write_byte(0xFF02, 0x00); // Reset
+        memory.write_byte(0xFF02, 0x00); // clear transfer-start flag
+        return Some(byte);
     }
+    None
 }
 
 pub fn gb_doc_load_test_rom(memory: &mut Memory, filepath: &str) {

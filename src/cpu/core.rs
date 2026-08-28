@@ -52,6 +52,7 @@ pub struct CPU {
     pub interrupts: Interrupts,
     pub is_halted: bool,
     pub is_stopped: bool,
+    pub halt_bug: bool,
 }
 
 impl std::fmt::Display for CPU {
@@ -112,6 +113,7 @@ impl CPU {
             cycles: 0,
             is_halted: false,
             is_stopped: false,
+            halt_bug: false,
             interrupts: Interrupts {
                 ie: 0,
                 if_: 0,
@@ -146,7 +148,13 @@ impl CPU {
 
     pub fn fetch_byte(&mut self, memory: &Memory) -> u8 {
         let opcode = memory.read_byte(self.pc);
-        self.pc += 1;
+        if self.halt_bug {
+            // HALT bug: the byte after HALT is read without advancing PC,
+            // so the next opcode executes twice.
+            self.halt_bug = false;
+        } else {
+            self.pc += 1;
+        }
         opcode
     }
 

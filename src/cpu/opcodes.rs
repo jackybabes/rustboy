@@ -539,8 +539,7 @@ impl CPU {
                 self.cycles += 8;
             }, // LD (HL),L - 0x75
             0x76 => {
-                // panic!("HALT - 0x76 not implemented");
-                self.halt();
+                self.halt(memory);
                 self.cycles += 4;
             }, // HALT - 0x76
             0x77 => {

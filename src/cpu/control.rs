@@ -1,6 +1,7 @@
 use super::CPU;
 use super::core::Flag;
 use crate::memory::Memory;
+use crate::data::HardwareRegister;
 
 impl CPU {
     pub fn jump_relative(&mut self, offset: i8) {
@@ -83,12 +84,22 @@ impl CPU {
     }
 
     pub fn reti(&mut self, memory: &mut Memory) {
-        self.enable_interrupts();
         self.ret(memory);
+        // RETI enables interrupts immediately, unlike EI which is delayed.
+        self.interrupts.ime = true;
+        self.interrupts.enable_ime_next = false;
     }
 
-    pub fn halt(&mut self) {
-        self.is_halted = true;
+    pub fn halt(&mut self, memory: &Memory) {
+        let ie = memory.read_hardware_register(HardwareRegister::IE);
+        let if_ = memory.read_hardware_register(HardwareRegister::IF);
+        if !self.interrupts.ime && (ie & if_ & 0x1F) != 0 {
+            // HALT bug: CPU does not halt, and the next opcode fetch fails to
+            // increment PC (the byte after HALT runs twice).
+            self.halt_bug = true;
+        } else {
+            self.is_halted = true;
+        }
     }
 
     pub fn stop(&mut self) {
