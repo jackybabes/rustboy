@@ -1,3 +1,4 @@
+pub mod cartridge;
 pub mod cpu;
 pub mod memory;
 pub mod data;
@@ -8,6 +9,7 @@ pub mod gameboy_doctor;
 use std::io;
 use std::path::Path;
 
+use cartridge::Cartridge;
 use cpu::CPU;
 use memory::Memory;
 use data::HardwareRegister;
@@ -101,11 +103,9 @@ impl GameBoy {
         cycles
     }
 
-    /// Load a 32 KiB (non-banked) ROM image into the ROM region.
-    pub fn load_rom(&mut self, rom: &[u8]) {
-        for (i, byte) in rom.iter().take(0x8000).enumerate() {
-            self.memory.write_byte(i as u16, *byte);
-        }
+    /// Insert a cartridge built from a raw ROM image.
+    pub fn load_rom(&mut self, rom: Vec<u8>) {
+        self.memory.load_cartridge(Cartridge::new(rom));
     }
 }
 
@@ -141,7 +141,7 @@ pub fn run_test_rom(
     let rom = std::fs::read(path.as_ref())?;
 
     let mut gb = GameBoy::new();
-    gb.load_rom(&rom);
+    gb.load_rom(rom);
     gameboy_doctor::gb_doc_set_inital_registers(&mut gb.cpu);
 
     let mut serial = String::new();
