@@ -5,16 +5,22 @@ mod interrupts;
 mod timer;
 mod gameboy_doctor;
 
+use std::io::{self, Write};
+use std::process;
+
 use cpu::CPU;
 use memory::Memory;
 use data::HardwareRegister;
 use interrupts::handle_interrupt;
 use timer::Timer;
 
+const DOTS_PER_FRAME: u32 = 70224;
+
 pub struct GameBoy {
     pub cpu: CPU,
     pub memory: Memory,
     pub timer: Timer,
+    ppu_dots: u32,
 }
 
 impl GameBoy {
@@ -26,26 +32,33 @@ impl GameBoy {
             cpu: CPU::new(),
             memory: memory,
             timer: timer,
+            ppu_dots: 0,
         }
     }
 
     fn tick(&mut self, cycles: u16) {
         self.timer.step(cycles, &mut self.memory);
-        // ppu etc
+
+        // No PPU yet: fake a VBlank interrupt once per frame so ROMs that idle
+        // in `EI; HALT` waiting for VBlank keep advancing.
+        self.ppu_dots += cycles as u32;
+        if self.ppu_dots >= DOTS_PER_FRAME {
+            self.ppu_dots -= DOTS_PER_FRAME;
+            let if_ = self.memory.read_hardware_register(HardwareRegister::IF);
+            self.memory.write_hardware_register(HardwareRegister::IF, if_ | 0b0000_0001);
+        }
     }
 
     fn step(&mut self) -> u16 {
         // 2. HALT: if halted, either wake on interrupt (HALT bug) or burn cycles
         if self.cpu.is_halted {
-            // print!("Halted");
             let ie = self.memory.read_hardware_register(HardwareRegister::IE);
             let if_ = self.memory.read_hardware_register(HardwareRegister::IF);
-            let pending = ie & if_;
 
-            if !self.cpu.interrupts.ime && pending != 0 {
-                self.cpu.is_halted = false; // HALT bug: wake but don't jump yet
-            } else if self.cpu.interrupts.ime && pending != 0 {
-                self.cpu.is_halted = false; // normal: next step will take interrupt
+            if ie & if_ & 0x1F != 0 {
+                // A pending interrupt wakes the CPU regardless of IME. If IME is
+                // set, the interrupt block below services it this same step.
+                self.cpu.is_halted = false;
             } else {
                 self.tick(4);
                 return 4;
@@ -90,34 +103,47 @@ impl GameBoy {
 fn main() {
     let mut gameboy = GameBoy::new();
 
-    let rom_path = "/Users/jack/Code/rustboy/roms/gb-test-roms/cpu_instrs/individual/02-interrupts.gb";
+    let rom_path = "/Users/jack/Code/rustboy/roms/gb-test-roms/cpu_instrs/cpu_instrs.gb";
 
     gameboy_doctor::gb_doc_load_test_rom(&mut gameboy.memory, rom_path);
     gameboy_doctor::gb_doc_set_inital_registers(&mut gameboy.cpu);
     println!("Initial Registers");
     gameboy_doctor::gb_doc_print(&mut gameboy.cpu, &mut gameboy.memory);
 
-    let mut last_pc = 0;
-    let mut stable_count = 0; 
-
+    let mut serial = String::new();
+    let mut last_pc = 0u16;
+    let mut stuck = 0u32;
 
     loop {
         gameboy.step();
-        // You can add any logging/printing here if desired, e.g. println!("Cycles: {}", cycles);
-        gameboy_doctor::gb_doc_handle_serial(&mut gameboy.memory);
-        // println!("{}", gameboy.cpu);
 
-        // Test for infinite loop
-        if last_pc == gameboy.cpu.pc {
-            stable_count += 1;
-            if stable_count > 10000  {
-                println!("Stable count: {}", stable_count);
-                break;
+        if let Some(byte) = gameboy_doctor::gb_doc_handle_serial(&mut gameboy.memory) {
+            print!("{}", byte as char);
+            io::stdout().flush().ok();
+            serial.push(byte as char);
+
+            // blargg test ROMs report their verdict over serial, then spin.
+            if serial.contains("Passed") {
+                println!();
+                process::exit(0);
             }
-        } else {
-            stable_count = 0;
+            if serial.contains("Failed") {
+                println!();
+                process::exit(1);
+            }
         }
 
+        // Safety net: bail if the CPU is genuinely wedged (PC frozen while not
+        // halted) so a crashed ROM doesn't hang forever.
+        if gameboy.cpu.pc == last_pc && !gameboy.cpu.is_halted {
+            stuck += 1;
+            if stuck > 5_000_000 {
+                eprintln!("\n[emulator] stuck at PC {:#06X} — aborting", gameboy.cpu.pc);
+                process::exit(2);
+            }
+        } else {
+            stuck = 0;
+        }
         last_pc = gameboy.cpu.pc;
     }
 }

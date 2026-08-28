@@ -22,6 +22,4 @@ pub fn handle_interrupt(cpu: &mut CPU, memory: &mut Memory, interrupt: u8) {
     // Push current PC to stack
     cpu.push_u16(memory, cpu.pc);
     cpu.pc = addr;
-
-    cpu.cycles += 20;
 }
