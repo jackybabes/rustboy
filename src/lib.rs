@@ -3,6 +3,8 @@ pub mod cpu;
 pub mod memory;
 pub mod data;
 pub mod interrupts;
+pub mod joypad;
+pub mod ppu;
 pub mod timer;
 pub mod gameboy_doctor;
 
@@ -14,9 +16,8 @@ use cpu::CPU;
 use memory::Memory;
 use data::HardwareRegister;
 use interrupts::handle_interrupt;
+use ppu::Ppu;
 use timer::Timer;
-
-const DOTS_PER_FRAME: u32 = 70224;
 
 /// How many consecutive steps with a frozen PC (while not halted) counts as a
 /// wedged CPU rather than a legitimate wait loop.
@@ -26,7 +27,7 @@ pub struct GameBoy {
     pub cpu: CPU,
     pub memory: Memory,
     pub timer: Timer,
-    ppu_dots: u32,
+    pub ppu: Ppu,
 }
 
 impl GameBoy {
@@ -38,21 +39,13 @@ impl GameBoy {
             cpu: CPU::new(),
             memory,
             timer,
-            ppu_dots: 0,
+            ppu: Ppu::new(),
         }
     }
 
     fn tick(&mut self, cycles: u16) {
         self.timer.step(cycles, &mut self.memory);
-
-        // No PPU yet: fake a VBlank interrupt once per frame so ROMs that idle
-        // in `EI; HALT` waiting for VBlank keep advancing.
-        self.ppu_dots += cycles as u32;
-        if self.ppu_dots >= DOTS_PER_FRAME {
-            self.ppu_dots -= DOTS_PER_FRAME;
-            let if_ = self.memory.read_hardware_register(HardwareRegister::IF);
-            self.memory.write_hardware_register(HardwareRegister::IF, if_ | 0b0000_0001);
-        }
+        self.ppu.step(cycles, &mut self.memory);
     }
 
     pub fn step(&mut self) -> u16 {
@@ -106,6 +99,21 @@ impl GameBoy {
     /// Insert a cartridge built from a raw ROM image.
     pub fn load_rom(&mut self, rom: Vec<u8>) {
         self.memory.load_cartridge(Cartridge::new(rom));
+    }
+
+    /// Run until the PPU finishes the next frame. Returns the number of CPU
+    /// cycles spent.
+    pub fn run_frame(&mut self) -> u64 {
+        let mut cycles = 0u64;
+        while !self.ppu.take_frame() {
+            cycles += self.step() as u64;
+        }
+        cycles
+    }
+
+    /// The current frame as shade indices (0..3), length 160*144, row-major.
+    pub fn framebuffer(&self) -> &[u8] {
+        self.ppu.framebuffer()
     }
 }
 

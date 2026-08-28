@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+minifb = "0.28.0"
 
 # The test ROMs execute tens of millions of instructions; optimize test builds
 # so `cargo test` finishes in seconds rather than minutes. Debug builds

@@ -1,5 +1,6 @@
 use crate::cartridge::Cartridge;
 use crate::data::HardwareRegister;
+use crate::joypad::Joypad;
 
 // Memory map (https://gbdev.io/pandocs/Memory_Map.html)
 // 0000-3FFF  ROM bank 00                (cartridge)
@@ -28,6 +29,7 @@ pub struct Memory {
     io: [u8; IO_SIZE],
     hram: [u8; HRAM_SIZE],
     ie: u8,
+    pub joypad: Joypad,
 }
 
 impl Memory {
@@ -40,6 +42,7 @@ impl Memory {
             io: [0; IO_SIZE],
             hram: [0; HRAM_SIZE],
             ie: 0,
+            joypad: Joypad::new(),
         }
     }
 
@@ -66,7 +69,8 @@ impl Memory {
             0xE000..=0xFDFF => self.wram[(address - 0xE000) as usize], // echo
             0xFE00..=0xFE9F => self.oam[(address - 0xFE00) as usize],
             0xFEA0..=0xFEFF => 0xFF, // not usable
-            0xFF00..=0xFF7F => self.io[(address - 0xFF00) as usize],
+            0xFF00 => self.joypad.read(),
+            0xFF01..=0xFF7F => self.io[(address - 0xFF00) as usize],
             0xFF80..=0xFFFE => self.hram[(address - 0xFF80) as usize],
             0xFFFF => self.ie,
         }
@@ -89,10 +93,41 @@ impl Memory {
             0xE000..=0xFDFF => self.wram[(address - 0xE000) as usize] = value, // echo
             0xFE00..=0xFE9F => self.oam[(address - 0xFE00) as usize] = value,
             0xFEA0..=0xFEFF => {} // not usable
-            0xFF00..=0xFF7F => self.io[(address - 0xFF00) as usize] = value,
+            0xFF00 => self.joypad.write_select(value),
+            0xFF46 => {
+                self.io[0x46] = value;
+                self.oam_dma(value);
+            }
+            0xFF01..=0xFF45 | 0xFF47..=0xFF7F => {
+                self.io[(address - 0xFF00) as usize] = value
+            }
             0xFF80..=0xFFFE => self.hram[(address - 0xFF80) as usize] = value,
             0xFFFF => self.ie = value,
         }
+    }
+
+    /// OAM DMA: copy 0xXX00-0xXX9F into OAM. Real hardware takes 160 M-cycles;
+    /// we do it instantly, which no test or game depends on being slower.
+    fn oam_dma(&mut self, high: u8) {
+        let src = (high as u16) << 8;
+        for i in 0..OAM_SIZE as u16 {
+            self.oam[i as usize] = self.read_byte(src + i);
+        }
+    }
+
+    /// Raise interrupt request bits in IF (0xFF0F). Used by the PPU/timer.
+    pub fn request_interrupt(&mut self, bits: u8) {
+        self.io[0x0F] |= bits;
+    }
+
+    /// Direct VRAM view for the renderer (0x8000-0x9FFF).
+    pub fn vram(&self) -> &[u8] {
+        &self.vram
+    }
+
+    /// Direct OAM view for the renderer (0xFE00-0xFE9F).
+    pub fn oam(&self) -> &[u8] {
+        &self.oam
     }
 
     pub fn write_word(&mut self, address: u16, value: u16) {
