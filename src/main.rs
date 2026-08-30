@@ -8,7 +8,7 @@ use rustboy::joypad::Button;
 use rustboy::ppu::{SCREEN_H, SCREEN_W};
 use rustboy::{run_test_rom, GameBoy, TestOutcome};
 
-const DEFAULT_ROM: &str = "roms/gb-test-roms/cpu_instrs/cpu_instrs.gb";
+const DEFAULT_ROM: &str = "test-roms/blargg/cpu_instrs/cpu_instrs.gb";
 
 /// DMG shade (0..3) -> 0RGB, a soft green LCD look.
 const SHADES: [u32; 4] = [0x00E0F8D0, 0x0088C070, 0x00346856, 0x00081820];

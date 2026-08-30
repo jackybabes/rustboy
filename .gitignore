@@ -23,6 +23,8 @@ target/
 .vscode/
 *.log
 
+# Local ROM library (commercial dumps, full test-suite checkouts, boot ROM).
+# Test ROMs the suite actually needs are committed under test-roms/ instead.
 roms/
 log.txt
 .DS_Store

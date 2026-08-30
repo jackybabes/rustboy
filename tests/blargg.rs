@@ -1,8 +1,8 @@
 //! Runs blargg's test ROMs through the emulator.
 //!
 //! Each ROM is its own `#[test]`, so `cargo test --test blargg` runs them one
-//! after another and reports pass/fail per ROM. ROMs are vendored under
-//! `roms/gb-test-roms/` (git submodule).
+//! after another and reports pass/fail per ROM. ROMs are committed under
+//! `test-roms/blargg/`, so this works on a fresh clone with no setup.
 //!
 //! Run just these:      cargo test --test blargg
 //! See serial output:   cargo test --test blargg -- --nocapture
@@ -13,14 +13,14 @@ use std::path::PathBuf;
 use rustboy::{run_test_rom, TestOutcome};
 
 fn roms_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("roms/gb-test-roms")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("test-roms/blargg")
 }
 
 fn run(rel_path: &str) {
     let path = roms_root().join(rel_path);
     assert!(
         path.exists(),
-        "test ROM not found: {}\n(is the gb-test-roms submodule checked out?)",
+        "test ROM not found: {}\n(it should be committed under test-roms/blargg/)",
         path.display()
     );
 
