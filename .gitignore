@@ -28,3 +28,7 @@ target/
 roms/
 log.txt
 .DS_Store
+
+# Web build output (web/build.sh)
+web/pkg/
+web/dist/

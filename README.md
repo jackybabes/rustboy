@@ -2,6 +2,9 @@
 
 A Game Boy (DMG) emulator written in Rust.
 
+**[▶ Play it in the browser](https://jackybabes.github.io/rustboy/)** — the same
+emulator compiled to WebAssembly. Load your own `.gb` ROM; nothing is uploaded.
+
 <p align="center">
   <img src="assets/tetris-title.png" alt="Tetris title screen running in rustboy" width="360">
 </p>
@@ -59,6 +62,26 @@ A ROM path is resolved as given, then relative to the crate root.
 | `Backspace` / `Right Shift` | Select |
 | `Esc` | Quit |
 
+## Web build (WebAssembly)
+
+The browser version lives in [`web/`](web/): a small `wasm-bindgen` wrapper
+crate around the `rustboy` library, plus a static page (`index.html`,
+`main.js`, `style.css`). It's deployed to GitHub Pages by
+[`.github/workflows/pages.yml`](.github/workflows/pages.yml) on every push to
+`main`.
+
+To build and run it locally:
+
+```bash
+rustup target add wasm32-unknown-unknown
+cargo install wasm-pack
+./web/build.sh                              # -> web/dist/
+python3 -m http.server -d web/dist 8080     # open http://localhost:8080
+```
+
+It has to be served over HTTP — opening `index.html` as a file won't load the
+WebAssembly module.
+
 ## Tests
 
 ```bash
@@ -106,6 +129,7 @@ Checked to boot and render correctly (dumps not committed — copyright):
 | `src/timer.rs` | DIV / TIMA / TMA / TAC |
 | `src/lib.rs` | `GameBoy` (ties it together), `run_test_rom` |
 | `src/main.rs` | Windowed frontend + `--headless` test runner |
+| `web/` | WebAssembly bindings + browser frontend (GitHub Pages) |
 | `tests/` | `blargg.rs` (ROM suite), `ppu.rs` (render smoke tests) |
 | `test-roms/` | Committed blargg ROMs (see its README) |
 | `roms/` | **git-ignored** — your local ROM library / boot ROM |
